@@ -4,16 +4,16 @@ configurations = {
     1: dict(
         SEED = 1337, # random seed for reproduce results
         
-        DATA_ROOT = '../facedata.mxnet/ms1m-retinaface-t1-clean-img', # the parent root where your train/val/test data are stored
-        RECORD_DIR = '../facedata.mxnet/ms1m-retinaface-t1-clean.txt', # the dataset record dir
-        VAL_DATA_ROOT = '../facedata.mxnet/face_val_data', # the parent root where your val/test data are stored
-        MODEL_ROOT = '../models/test_pytorch/model', # the root to buffer your checkpoints
-        LOG_ROOT = '../models/test_pytorch/log', # the root to log your train/val status
-        IS_RESUME = False,
-        BACKBONE_RESUME_ROOT = "",
-        HEAD_RESUME_ROOT = "",
+        DATA_ROOT = '/home/imagus/datasets/', # the parent root where your train/val/test data are stored
+        RECORD_DIR = '/home/imagus/datasets/record.txt', # the dataset record dir
+        VAL_DATA_ROOT = '/home/imagus/datasets/data', # the parent root where your val/test data are stored
+        MODEL_ROOT = 'models', # the root to buffer your checkpoints
+        LOG_ROOT = 'log', # the root to log your train/val status
+        IS_RESUME = True,
+        BACKBONE_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Backbone_AttentionNet_IR_56_Epoch_12_Time_2020-05-28-14-48_checkpoint.pth",
+        HEAD_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Head_ArcFace_Epoch_12_Time_2020-05-28-14-48_checkpoint.pth",
         
-        BACKBONE_NAME = 'MobileFaceNet', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
+        BACKBONE_NAME = 'AttentionNet_IR_56', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
                                 #'AttentionNet_IR_56', 'AttentionNet_IRSE_56','AttentionNet_IR_92', 'AttentionNet_IRSE_92']
         HEAD_NAME = "ArcFace", # support:  ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax', 'ArcNegFace', 'CurricularFace', 'SVX']
@@ -23,11 +23,11 @@ configurations = {
         RGB_MEAN = [0.5, 0.5, 0.5], # for normalize inputs to [-1, 1]
         RGB_STD = [0.5, 0.5, 0.5],
         EMBEDDING_SIZE = 512, # feature dimension
-        BATCH_SIZE = 1024,
-        EVAL_FREQ = 2000, #for ms1m, batch size 1024, EVAL_FREQ=2000
+        BATCH_SIZE = 256,
+        EVAL_FREQ = 3000, #for ms1m, batch size 1024, EVAL_FREQ=2000
         DROP_LAST = True, # whether drop the last batch to ensure consistent batch_norm statistics
         
-        LR = 0.1, # initial LR
+        LR = 0.01, # initial LR
         LR_SCHEDULER = 'cosine', # step/multi_step/cosine
         WARMUP_EPOCH = 0, 
         WARMUP_LR = 0.0,
@@ -42,11 +42,11 @@ configurations = {
         
         WORLD_SIZE = 1,
         RANK = 0,
-        GPU = [0,1], # specify your GPU ids
+        GPU = [0,1,2], # specify your GPU ids
         DIST_BACKEND = 'nccl', # 'nccl', 'gloo'
         DIST_URL = 'tcp://localhost:23456',
-        NUM_WORKERS = 2,
-        TEST_GPU_ID = [0,1,2,3,4,5,6,7],
+        NUM_WORKERS = 6,
+        TEST_GPU_ID = [0,1,2],
 
         USE_APEX = False,
         SYNC_BN = False,

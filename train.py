@@ -30,15 +30,17 @@ from util.utils import *
 from dataset.datasets import FaceDataset
 from dataset.randaugment import RandAugment
 from dataset.utils import *
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
+#from torch.cuda.amp import GradScaler, autocast
 import apex
 from apex.parallel import DistributedDataParallel as DDP
 from apex import amp
 from util.flops_counter import *
 from optimizer.lr_scheduler import *
-#from torchprofile import profile_macs
+
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -93,7 +95,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     print("Overall Configurations:")
     print(cfg)
     print("=" * 60)
-    transform_list = [transforms.RandomHorizontalFlip(),
+    transform_list = [transforms.Resize(112), transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
     if cfg['RANDOM_ERASING']:
@@ -206,6 +208,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 cfg['START_EPOCH'] = checkpoint['EPOCH']
                 head.load_state_dict(checkpoint['HEAD'])
                 optimizer.load_state_dict(checkpoint['OPTIMIZER'])
+                del(checkpoint)
         else:
             print("No Checkpoint Found at '{}' and '{}'. Please Have a Check or Continue to Train from Scratch".format(BACKBONE_RESUME_ROOT, HEAD_RESUME_ROOT))
         print("=" * 60)
@@ -213,7 +216,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     if SYNC_BN:
         backbone = apex.parallel.convert_syncbn_model(backbone)
     if USE_APEX:
-        [backbone, head], optimizer = amp.initialize([backbone, head], optimizer, opt_level='O2')
+        [backbone, head], optimizer = amp.initialize([backbone, head], optimizer, opt_level='O1')
         backbone = DDP(backbone)
         head = DDP(head)
     else:
@@ -229,13 +232,13 @@ def main_worker(gpu, ngpus_per_node, cfg):
 
     writer = SummaryWriter(LOG_ROOT) # writer for buffering intermedium results
     # train
+    batch = 0  # batch index
     for epoch in range(cfg['START_EPOCH'], cfg['NUM_EPOCH']):
         train_sampler.set_epoch(epoch)
         if LR_SCHEDULER != 'cosine':
             scheduler.step()
         #train for one epoch
-        DISP_FREQ = 100  # 100 batch
-        batch = 0  # batch index
+        DISP_FREQ = 200  # 200 batch
         backbone.train()  # set to training mode
         head.train()
         losses = AverageMeter()
@@ -255,6 +258,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
             elif cfg['CUTMIX']:
                     inputs, labels_a, labels_b, lam = cutmix_data(inputs, labels, cfg['GPU'], cfg['CUTMIX_PROB'], cfg['MIXUP_ALPHA'])
                     inputs, labels_a, labels_b = map(Variable, (inputs, labels_a, labels_b))
+            #with autocast():
             features = backbone(inputs)
             outputs = head(features, labels)
 
@@ -281,14 +285,14 @@ def main_worker(gpu, ngpus_per_node, cfg):
             losses.update(lossx.data.item(), inputs.size(0))
             top1.update(prec1.data.item(), inputs.size(0))
             top5.update(prec5.data.item(), inputs.size(0))
-            # dispaly training loss & acc every DISP_FREQ
+            # display training loss & acc every DISP_FREQ
             if ((batch + 1) % DISP_FREQ == 0) or batch == 0:
                 print("=" * 60)
                 print('Epoch {}/{} Batch {}/{}\t'
                                 'Training Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                                 'Training Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                                 'Training Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                                    epoch + 1, cfg['NUM_EPOCH'], batch + 1, len(train_loader), loss = losses, top1 = top1, top5 = top5))
+                                    epoch + 1, cfg['NUM_EPOCH'], (batch % len(train_loader)) + 1, len(train_loader), loss = losses, top1 = top1, top5 = top5))
                 print("=" * 60)
 
             # perform validation & save checkpoints per epoch
@@ -300,13 +304,18 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 print("=" * 60)
                 print("Perform Evaluation on LFW, CFP_FP, AgeD and VGG2_FP, and Save Checkpoints...")
                 accuracy_lfw, best_threshold_lfw, roc_curve_lfw = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, lfw, lfw_issame)
-                buffer_val(writer, "LFW", accuracy_lfw, best_threshold_lfw, roc_curve_lfw, epoch + 1)
+                buffer_val(writer, "LFW", accuracy_lfw, best_threshold_lfw, roc_curve_lfw, batch + 1)
                 accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, cfp_fp, cfp_fp_issame)
-                buffer_val(writer, "CFP_FP", accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp, epoch + 1)
+                buffer_val(writer, "CFP_FP", accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp, batch + 1)
                 accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30 = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, agedb_30, agedb_30_issame)
-                buffer_val(writer, "AgeDB", accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30, epoch + 1)
+                buffer_val(writer, "AgeDB", accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30, batch + 1)
                 accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, vgg2_fp, vgg2_fp_issame)
-                buffer_val(writer, "VGGFace2_FP", accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp, epoch + 1)
+                buffer_val(writer, "VGGFace2_FP", accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp, batch + 1)
+                writer.add_scalar("Training_Loss", losses.avg, batch + 1)
+                writer.add_scalar("Training_Accuracy", top1.avg, batch + 1)
+                writer.add_scalar("Top5", top5.avg, batch+1)
+        
+                writer.flush()
                 print("Epoch {}/{}, Evaluation: LFW Acc: {}, CFP_FP Acc: {}, AgeDB Acc: {}, VGG2_FP Acc: {}".format(epoch + 1, NUM_EPOCH, accuracy_lfw, accuracy_cfp_fp, accuracy_agedb_30, accuracy_vgg2_fp))
                 print("=" * 60)
 
@@ -326,8 +335,6 @@ def main_worker(gpu, ngpus_per_node, cfg):
                     torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "Epoch_{}_Time_{}_checkpoint.pth".format(epoch + 1, get_time())))
             sys.stdout.flush()
             batch += 1 # batch index
-        epoch_loss = losses.avg
-        epoch_acc = top1.avg
         print("=" * 60)
         print('Epoch: {}/{}\t''Training Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                 'Training Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
@@ -335,13 +342,6 @@ def main_worker(gpu, ngpus_per_node, cfg):
                     epoch + 1, cfg['NUM_EPOCH'], loss = losses, top1 = top1, top5 = top5))
         sys.stdout.flush()
         print("=" * 60)
-        if cfg['RANK'] % ngpus_per_node == 0:
-            writer.add_scalar("Training_Loss", epoch_loss, epoch + 1)
-            writer.add_scalar("Training_Accuracy", epoch_acc, epoch + 1)
-            writer.add_scalar("Top1", top1.avg, epoch+1)
-            writer.add_scalar("Top5", top5.avg, epoch+1)
-
-
-
+    
 if __name__ == '__main__':
     main()

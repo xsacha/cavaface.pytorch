@@ -156,7 +156,7 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
 
 def buffer_val(writer, db_name, acc, best_threshold, roc_curve_tensor, epoch):
     writer.add_scalar('{}_Accuracy'.format(db_name), acc, epoch)
-    writer.add_scalar('{}_Best_Threshold'.format(db_name), best_threshold, epoch)
+    #writer.add_scalar('{}_Best_Threshold'.format(db_name), best_threshold, epoch)
     writer.add_image('{}_ROC_Curve'.format(db_name), roc_curve_tensor, epoch)
     
 def gen_plot(fpr, tpr):
