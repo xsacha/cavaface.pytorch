@@ -205,7 +205,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
             if os.path.isfile(HEAD_RESUME_ROOT):
                 print("Loading Head Checkpoint '{}'".format(HEAD_RESUME_ROOT))
                 checkpoint = torch.load(HEAD_RESUME_ROOT, map_location=loc)
-                cfg['START_EPOCH'] = checkpoint['EPOCH']
+                cfg['START_EPOCH'] = 2 #checkpoint['EPOCH']
                 head.load_state_dict(checkpoint['HEAD'])
                 optimizer.load_state_dict(checkpoint['OPTIMIZER'])
                 del(checkpoint)
@@ -232,7 +232,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
 
     writer = SummaryWriter(LOG_ROOT) # writer for buffering intermedium results
     # train
-    batch = 0  # batch index
+    batch = cfg['START_EPOCH'] * len(train_loader)  # batch index
     for epoch in range(cfg['START_EPOCH'], cfg['NUM_EPOCH']):
         train_sampler.set_epoch(epoch)
         if LR_SCHEDULER != 'cosine':

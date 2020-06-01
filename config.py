@@ -10,8 +10,8 @@ configurations = {
         MODEL_ROOT = 'models', # the root to buffer your checkpoints
         LOG_ROOT = 'log', # the root to log your train/val status
         IS_RESUME = True,
-        BACKBONE_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Backbone_AttentionNet_IR_56_Epoch_12_Time_2020-05-28-14-48_checkpoint.pth",
-        HEAD_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Head_ArcFace_Epoch_12_Time_2020-05-28-14-48_checkpoint.pth",
+        BACKBONE_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Backbone_AttentionNet_IR_56_Epoch_23_Time_2020-06-01-11-57_checkpoint.pth",
+        HEAD_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Head_ArcFace_Epoch_23_Time_2020-06-01-11-57_checkpoint.pth",
         
         BACKBONE_NAME = 'AttentionNet_IR_56', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
@@ -27,7 +27,7 @@ configurations = {
         EVAL_FREQ = 3000, #for ms1m, batch size 1024, EVAL_FREQ=2000
         DROP_LAST = True, # whether drop the last batch to ensure consistent batch_norm statistics
         
-        LR = 0.01, # initial LR
+        LR = 0.00001, # initial LR
         LR_SCHEDULER = 'cosine', # step/multi_step/cosine
         WARMUP_EPOCH = 0, 
         WARMUP_LR = 0.0,
