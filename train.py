@@ -95,7 +95,12 @@ def main_worker(gpu, ngpus_per_node, cfg):
     print("Overall Configurations:")
     print(cfg)
     print("=" * 60)
-    transform_list = [transforms.Resize(112), transforms.RandomHorizontalFlip(),
+    transform_list = [
+                    transforms.RandomAffine(0, shear=(10, 5), resample=3),
+                    transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.15),
+                    transforms.Resize(128, interpolation=3),
+                    transforms.RandomCrop(112),
+                    transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
     if cfg['RANDOM_ERASING']:
