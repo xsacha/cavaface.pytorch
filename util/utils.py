@@ -12,6 +12,7 @@ from PIL import Image
 import bcolz
 import io
 import os
+from dataset.randaugment import BottomCrop
 
 
 def get_time():
@@ -115,8 +116,7 @@ def hflip_batch(imgs_tensor):
 ccrop = transforms.Compose([
             de_preprocess,
             transforms.ToPILImage(),
-            transforms.Resize(128, interpolation=3),
-            transforms.CenterCrop(112),
+            BottomCrop(),
             transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])

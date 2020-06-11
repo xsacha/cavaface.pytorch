@@ -6,6 +6,7 @@ import PIL, PIL.ImageOps, PIL.ImageEnhance, PIL.ImageDraw
 import numpy as np
 import torch
 from PIL import Image
+import torchvision.transforms as transforms
 
 
 def ShearX(img, v):  # [-0.3, 0.3]
@@ -183,3 +184,19 @@ class RandAugment:
             img = op(img, val)
 
         return img
+
+# Bottom crop of any 112x112, resized to 112 or center crop of any non-112 image
+class BottomCrop:
+    def __init__(self, r=False):
+       self.r = r
+
+    def __call__(self, img):
+        width, height = img.size
+        if width == 112:
+            if self.r:
+                return transforms.functional.resized_crop(img, 6 + round(np.random.uniform(6)), 6, 100, 100, 112) 
+            else:
+                return transforms.functional.resized_crop(img, 12, 6, 100, 100, 112) 
+        else:
+            return transforms.functional.resized_crop(img, round(height / 19.0), round(width / 19.0), round(height * 17.0 / 19.0), round(width * 17.0 / 19.0), 112) 
+

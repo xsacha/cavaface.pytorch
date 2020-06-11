@@ -28,7 +28,7 @@ from head.metrics import *
 from loss.loss import *
 from util.utils import *
 from dataset.datasets import FaceDataset
-from dataset.randaugment import RandAugment
+from dataset.randaugment import BottomCrop, RandAugment
 from dataset.utils import *
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -96,10 +96,9 @@ def main_worker(gpu, ngpus_per_node, cfg):
     print(cfg)
     print("=" * 60)
     transform_list = [
-                    transforms.RandomAffine(0, shear=(10, 5), resample=3),
+                    #transforms.RandomAffine(0, shear=(10, 5)),
+                    BottomCrop(r=True),
                     transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.15),
-                    transforms.Resize(128, interpolation=3),
-                    transforms.RandomCrop(112),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
@@ -127,7 +126,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                      'IR_50': IR_50, 'IR_100': IR_100, 'IR_101': IR_101, 'IR_152': IR_152, 'IR_185': IR_185, 'IR_200': IR_200,
                      'IR_SE_50': IR_SE_50, 'IR_SE_100': IR_SE_100, 'IR_SE_101': IR_SE_101, 'IR_SE_152': IR_SE_152, 'IR_SE_185': IR_SE_185, 'IR_SE_200': IR_SE_200,
                      'AttentionNet_IR_56': AttentionNet_IR_56,'AttentionNet_IRSE_56': AttentionNet_IRSE_56,'AttentionNet_IR_92': AttentionNet_IR_92,'AttentionNet_IRSE_92': AttentionNet_IRSE_92,
-                     'PolyNet': PolyNet, 'PolyFace': PolyFace, 'EfficientPolyFace': EfficientPolyFace,
+                     #'PolyNet': PolyNet, 'PolyFace': PolyFace, 'EfficientPolyFace': EfficientPolyFace,
                      'ResNeSt_50': resnest50, 'ResNeSt_101': resnest101, 'ResNeSt_100': resnest100
                     }
     BACKBONE_NAME = cfg['BACKBONE_NAME']
@@ -210,7 +209,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
             if os.path.isfile(HEAD_RESUME_ROOT):
                 print("Loading Head Checkpoint '{}'".format(HEAD_RESUME_ROOT))
                 checkpoint = torch.load(HEAD_RESUME_ROOT, map_location=loc)
-                cfg['START_EPOCH'] = 2 #checkpoint['EPOCH']
+                cfg['START_EPOCH'] = checkpoint['EPOCH']
                 head.load_state_dict(checkpoint['HEAD'])
                 optimizer.load_state_dict(checkpoint['OPTIMIZER'])
                 del(checkpoint)
@@ -327,17 +326,16 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 print("=" * 60)
                 print("Save Checkpoint...")
                 if cfg['RANK'] % ngpus_per_node == 0:
-                    #torch.save(backbone.module.state_dict(), os.path.join(MODEL_ROOT, "Backbone_{}_Epoch_{}_Time_{}_checkpoint.pth".format(BACKBONE_NAME, epoch + 1, get_time())))
-                    #save_dict = {'EPOCH': epoch+1,
-                    #            'HEAD': head.module.state_dict(),
-                    #            'OPTIMIZER': optimizer.state_dict()}
-                    #torch.save(save_dict, os.path.join(MODEL_ROOT, "Head_{}_Epoch_{}_Time_{}_checkpoint.pth".format(HEAD_NAME, epoch + 1, get_time())))
-                    ori_backbone.load_state_dict(backbone.module.state_dict())
-                    ori_backbone.eval()
-                    x = torch.randn(1,3,112,112).cuda()
-                    traced_cell = torch.jit.trace(ori_backbone, (x))
-                    #torch.save(ori_backbone, os.path.join(MODEL_ROOT, "model.pth"))
-                    torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "Epoch_{}_Time_{}_checkpoint.pth".format(epoch + 1, get_time())))
+                    torch.save(backbone.module.state_dict(), os.path.join(MODEL_ROOT, "Backbone_{}_Epoch_{}_Time_{}_checkpoint.pth".format(BACKBONE_NAME, epoch + 1, get_time())))
+                    save_dict = {'EPOCH': epoch+1,
+                                'HEAD': head.module.state_dict(),
+                                'OPTIMIZER': optimizer.state_dict()}
+                    torch.save(save_dict, os.path.join(MODEL_ROOT, "Head_{}_Epoch_{}_Time_{}_checkpoint.pth".format(HEAD_NAME, epoch + 1, get_time())))
+                    #ori_backbone.load_state_dict(backbone.module.state_dict())
+                    #ori_backbone.eval()
+                    #x = torch.randn(1,3,112,112).cuda()
+                    #traced_cell = torch.jit.trace(ori_backbone, (x))
+                    #torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "Epoch_{}_Time_{}_checkpoint.pth".format(epoch + 1, get_time())))
             sys.stdout.flush()
             batch += 1 # batch index
         print("=" * 60)
