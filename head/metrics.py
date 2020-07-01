@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 import math
+from torch.cuda.amp import GradScaler, autocast
 
 
 # Support: ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax']
@@ -87,10 +88,11 @@ class ArcFace(nn.Module):
 
         sin_theta = torch.sqrt(1.0 - torch.pow(target_logit, 2))
         cos_theta_m = target_logit * self.cos_m - sin_theta * self.sin_m #cos(target+margin)
-        if self.easy_margin:
-            final_target_logit = torch.where(target_logit > 0, cos_theta_m, target_loit)
-        else:
-            final_target_logit = torch.where(target_logit > self.th, cos_theta_m, target_logit - self.mm)
+        with autocast(enabled=False):
+            if self.easy_margin:
+                final_target_logit = torch.where(target_logit.float() > 0, cos_theta_m.float(), target_logit.float())
+            else:
+                final_target_logit = torch.where(target_logit.float() > self.th, cos_theta_m.float(), target_logit.float() - self.mm)
 
         cos_theta.scatter_(1, label.view(-1, 1).long(), final_target_logit)
         output = cos_theta * self.s
@@ -350,14 +352,16 @@ class CurricularFace(nn.Module):
         sin_theta = torch.sqrt(1.0 - torch.pow(target_logit, 2))
         cos_theta_m = target_logit * self.cos_m - sin_theta * self.sin_m #cos(target+margin)
         mask = cos_theta > cos_theta_m
-        final_target_logit = torch.where(target_logit > self.threshold, cos_theta_m, target_logit - self.mm)
-
-        hard_example = cos_theta[mask]
-        with torch.no_grad():
-            self.t = target_logit.mean() * 0.01 + (1 - 0.01) * self.t
-        cos_theta[mask] = hard_example * (self.t + hard_example)
-        cos_theta.scatter_(1, label.view(-1, 1).long(), final_target_logit)
-        output = cos_theta * self.s
+        with autocast(enabled=False):
+            logitfloat = target_logit.float()
+            final_target_logit = torch.where(logitfloat > self.threshold, cos_theta_m.float(), logitfloat - self.mm)
+            cm = cos_theta.float()
+            hard_example = cm[mask]
+            with torch.no_grad():
+                self.t = target_logit.mean() * 0.01 + (1 - 0.01) * self.t
+            cm[mask] = hard_example * (self.t + hard_example)
+            cm.scatter_(1, label.view(-1, 1).long(), final_target_logit)
+            output = cm * self.s
         return output
 
 class ArcNegFace(nn.Module):

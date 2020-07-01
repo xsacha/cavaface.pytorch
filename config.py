@@ -10,8 +10,8 @@ configurations = {
         MODEL_ROOT = 'models', # the root to buffer your checkpoints
         LOG_ROOT = 'log', # the root to log your train/val status
         IS_RESUME = True,
-        BACKBONE_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Backbone_AttentionNet_IRSE_92_Epoch_4_Time_2020-06-11-18-51_checkpoint.pth",
-        HEAD_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Head_CurricularFace_Epoch_4_Time_2020-06-11-18-51_checkpoint.pth",
+        BACKBONE_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Backbone_AttentionNet_IRSE_92_Epoch_2_Time_2020-07-01-11-05_checkpoint.pth",
+        HEAD_RESUME_ROOT = "/home/imagus/dev/cavaface.pytorch/models/Head_CurricularFace_Epoch_2_Time_2020-07-01-11-05_checkpoint.pth", # "/home/imagus/dev/cavaface.pytorch/models/Head_CurricularFace_Epoch_48_Time_2020-06-28-06-33_checkpoint.pth", #"/home/imagus/dev/cavaface.pytorch/models/Head_CurricularFace_Epoch_16_Time_2020-06-17-11-32_checkpoint.pth",
         
         BACKBONE_NAME = 'AttentionNet_IRSE_92', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
@@ -23,16 +23,16 @@ configurations = {
         RGB_MEAN = [0.5, 0.5, 0.5], # for normalize inputs to [-1, 1]
         RGB_STD = [0.5, 0.5, 0.5],
         EMBEDDING_SIZE = 512, # feature dimension
-        BATCH_SIZE = 128,
+        BATCH_SIZE = 256,
         EVAL_FREQ = 4600, #for ms1m, batch size 1024, EVAL_FREQ=2000
         DROP_LAST = True, # whether drop the last batch to ensure consistent batch_norm statistics
         
-        LR = 0.05, # initial LR
+        LR = 0.02, # initial LR
         LR_SCHEDULER = 'cosine', # step/multi_step/cosine
         WARMUP_EPOCH = 0, 
         WARMUP_LR = 0.0,
         START_EPOCH = 0, #start epoch
-        NUM_EPOCH = 24, # total epoch number
+        NUM_EPOCH = 55, # total epoch number
         LR_STEP_SIZE = 10, # 'step' scheduler, period of learning rate decay. 
         LR_DECAY_EPOCH = [10, 18, 22], # ms1m epoch stages to decay learning rate
         LR_DECAT_GAMMA = 0.1, # multiplicative factor of learning rate decay
@@ -45,7 +45,7 @@ configurations = {
         GPU = [0,1,2], # specify your GPU ids
         DIST_BACKEND = 'nccl', # 'nccl', 'gloo'
         DIST_URL = 'tcp://localhost:23456',
-        NUM_WORKERS = 6,
+        NUM_WORKERS = 3,
         TEST_GPU_ID = [0,1,2],
 
         USE_APEX = False,

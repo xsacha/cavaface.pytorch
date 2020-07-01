@@ -13,14 +13,10 @@ import time
 import signal
 import traceback
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+#reload(sys)
+#sys.setdefaultencoding('utf-8')
 
-if sys.version_info.major == 2:
-  import Queue as queue
-  from Queue import Queue
-else:
-  import queue as Queue
+import queue
 import threading
 
 global signal_stop
@@ -168,8 +164,7 @@ class inferThread (threading.Thread):
             if idx == 0:
               continue
 
-            output = self.fwd_func(self.net, input_blob)
-            embedding = output[0]
+            embedding = self.fwd_func(self.net, input_blob)
     
             if self.is_flip:
                 embedding1 = embedding[0::2]
@@ -288,15 +283,15 @@ class CitrusBaseInfer(object):
         assert read_func is not None
 
         try:
-          in_q = Queue()
+          in_q = queue.Queue()
           for items in imgs:
             in_q.put(items)
           tasks = in_q.qsize()
 
           print("begin thread")
  
-          out_q = Queue()
-          img_q = Queue()
+          out_q = queue.Queue()
+          img_q = queue.Queue()
 
           read_ths = []
           infer_ths = []
@@ -366,7 +361,7 @@ class CitrusBaseInfer(object):
         assert read_func is not None
 
         try:
-          in_q = Queue()
+          in_q = queue.Queue()
           for items in imgs:
             in_q.put(items)
 

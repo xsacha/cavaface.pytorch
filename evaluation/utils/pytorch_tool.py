@@ -11,7 +11,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from utils.io import GPU_MEM_MAX, get_min_free_gpu_mem
-import commands
 from .pytorch_memlab import MemReporter
 
 def estimate_unit_mem(model, shape, ctx):

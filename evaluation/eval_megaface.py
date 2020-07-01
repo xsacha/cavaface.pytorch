@@ -24,12 +24,12 @@ class EvalMegaFace(object):
         self._emb_outdir_root = ''
         self._emb_clean_outdir_root = ''
         self._face_scrub_list = "./data/facescrub_lst"
-        self._face_scrub_root = "../data/megaface/facescrub_images"
+        self._face_scrub_root = "./data/megaface/facescrub_images"
         self._face_scrub = []
         self._face_scrub_emb_outdir = ''
         self._face_scrub_emb_clean_outdir = ''
         self._face_gallery_list = "./data/megaface_lst"
-        self._face_gallery_root = "../data/megaface/megaface_images"
+        self._face_gallery_root = "./data/megaface/megaface_images"
         self._face_gallery = []
         self._face_gallery_emb_outdir = ''
         self._face_gallery_emb_clean_outdir = ''

@@ -11,11 +11,11 @@ from torch.autograd import Variable
 from easydict import EasyDict as edict
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.pytorch_tool import estimate_unit_mem, estimate_batch_size, forward
-from citrus_base_infer import *
+from infer.citrus_base_infer import *
 import time
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+#reload(sys)
+#sys.setdefaultencoding('utf-8')
 
 class CitrusPytorchInfer(CitrusBaseInfer):
     def __init__(self, args, dtype='fp32'):

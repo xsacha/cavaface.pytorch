@@ -114,11 +114,7 @@ def hflip_batch(imgs_tensor):
 
 
 ccrop = transforms.Compose([
-            de_preprocess,
-            transforms.ToPILImage(),
-            BottomCrop(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+            BottomCrop(r=False),
         ])
 
 def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds = 10, tta = True):

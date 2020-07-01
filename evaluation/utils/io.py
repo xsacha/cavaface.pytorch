@@ -14,7 +14,7 @@ import pickle
 from sklearn.model_selection import KFold
 from scipy import interpolate
 from sklearn.decomposition import PCA
-import commands
+import subprocess
 
 GPU_MEM_MAX = 8e9
 
@@ -89,10 +89,10 @@ def _load_json_result_file(json_file):
 
 def _read_image(image_path, gray=False):
     if gray:
-        img = cv2.imread(image_path, cv2.CV_LOAD_IMAGE_GRAYSCALE)
+        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         img = np.expand_dims(img, axis=2)
     else:
-        img = cv2.imread(image_path, cv2.CV_LOAD_IMAGE_COLOR)
+        img = cv2.imread(image_path, cv2.IMREAD_COLOR)
     return img
 
 
@@ -438,7 +438,7 @@ def evaluate(embeddings, actual_issame, nrof_folds=10, pca = 0):
 # gpu
 def get_min_free_gpu_mem(gpuid):
     command="nvidia-smi | grep \"MiB /\" | awk -F ' ' '{print $9\" \"$11}'  | awk -F 'MiB' '{print $2-$1}'"
-    _code, output = commands.getstatusoutput(command)
+    _code, output = subprocess.getstatusoutput(command)
     min_mem = GPU_MEM_MAX
     output = [int(o) for o in output.split('\n')]
     for g in gpuid:

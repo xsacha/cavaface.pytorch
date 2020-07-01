@@ -12,14 +12,10 @@ import json
 import flask
 import signal
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+#reload(sys)
+#sys.setdefaultencoding('utf-8')
 
-if sys.version_info.major == 2:
-  import Queue as queue
-  from Queue import Queue
-else:
-  import queue as Queue
+import queue
 import threading
 
 
@@ -237,8 +233,8 @@ if __name__ == '__main__':
     global task_queue
     global merge_queue
     global service_down
-    task_queue = Queue()
-    merge_queue = Queue()
+    task_queue = queue.Queue()
+    merge_queue = queue.Queue()
     service_down = False
 
     parser = argparse.ArgumentParser()

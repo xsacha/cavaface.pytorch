@@ -33,7 +33,7 @@ from dataset.utils import *
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-#from torch.cuda.amp import GradScaler, autocast
+from torch.cuda.amp import GradScaler, autocast
 import apex
 from apex.parallel import DistributedDataParallel as DDP
 from apex import amp
@@ -97,8 +97,9 @@ def main_worker(gpu, ngpus_per_node, cfg):
     print("=" * 60)
     transform_list = [
                     #transforms.RandomAffine(0, shear=(10, 5)),
-                    BottomCrop(r=True),
-                    transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.15),
+                    #BottomCrop(r=False),
+                    transforms.Resize(112),
+                    transforms.ColorJitter(brightness=0.05, contrast=0.05, saturation=0.05),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
@@ -211,14 +212,21 @@ def main_worker(gpu, ngpus_per_node, cfg):
             if os.path.isfile(HEAD_RESUME_ROOT):
                 print("Loading Head Checkpoint '{}'".format(HEAD_RESUME_ROOT))
                 checkpoint = torch.load(HEAD_RESUME_ROOT, map_location=loc)
-                cfg['START_EPOCH'] = checkpoint['EPOCH']
+                cfg['START_EPOCH'] = 0 #checkpoint['EPOCH']
                 head.load_state_dict(checkpoint['HEAD'])
                 optimizer.load_state_dict(checkpoint['OPTIMIZER'])
                 del(checkpoint)
         else:
             print("No Checkpoint Found at '{}' and '{}'. Please Have a Check or Continue to Train from Scratch".format(BACKBONE_RESUME_ROOT, HEAD_RESUME_ROOT))
         print("=" * 60)
-    ori_backbone = copy.deepcopy(backbone)
+    #ori_backbone = copy.deepcopy(backbone)
+    #with torch.no_grad():
+    #    ori_backbone.load_state_dict(backbone.state_dict())
+    #    ori_backbone.eval()
+    #    x = torch.randn(1,3,112,112).cuda()
+    #    traced_cell = torch.jit.trace(ori_backbone, (x))
+    #    torch.jit.save(traced_cell, "latest.pt")
+
     if SYNC_BN:
         backbone = apex.parallel.convert_syncbn_model(backbone)
     if USE_APEX:
@@ -255,6 +263,9 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 scheduler.step()
             # compute output
             start_time=time.time()
+            if (batch + 1) % EVAL_FREQ == 0 or batch == cfg['START_EPOCH'] * len(train_loader): 
+                #grid = torchvision.utils.make_grid(inputs)
+                writer.add_image('images', de_preprocess(inputs[0]), batch + 1)
             inputs = inputs.cuda(cfg['GPU'], non_blocking=True)
             labels = labels.cuda(cfg['GPU'], non_blocking=True)
 
@@ -264,21 +275,21 @@ def main_worker(gpu, ngpus_per_node, cfg):
             elif cfg['CUTMIX']:
                     inputs, labels_a, labels_b, lam = cutmix_data(inputs, labels, cfg['GPU'], cfg['CUTMIX_PROB'], cfg['MIXUP_ALPHA'])
                     inputs, labels_a, labels_b = map(Variable, (inputs, labels_a, labels_b))
-            #with autocast():
-            features = backbone(inputs)
-            outputs = head(features, labels)
-
-            if cfg['MIXUP'] or cfg['CUTMIX']:
-                lossx = mixup_criterion(loss, outputs, labels_a, labels_b, lam)
-            else:
-                lossx = loss(outputs, labels) if HEAD_NAME != 'CircleLoss' else loss(outputs).mean()
-            end_time = time.time()
-            duration = end_time - start_time
-            if ((batch + 1) % DISP_FREQ == 0) and batch != 0:
-                print("batch inference time", duration)
-
             # compute gradient and do SGD step
             optimizer.zero_grad()
+            with autocast():
+                features = backbone(inputs)
+                outputs = head(features, labels)
+
+                if cfg['MIXUP'] or cfg['CUTMIX']:
+                    lossx = mixup_criterion(loss, outputs, labels_a, labels_b, lam)
+                else:
+                    lossx = loss(outputs, labels) if HEAD_NAME != 'CircleLoss' else loss(outputs).mean()
+                end_time = time.time()
+                duration = end_time - start_time
+                if ((batch + 1) % DISP_FREQ == 0) and batch != 0:
+                    print("batch inference time", duration)
+
             if USE_APEX:
                 with amp.scale_loss(lossx, optimizer) as scaled_loss:
                     scaled_loss.backward()
@@ -292,7 +303,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
             top1.update(prec1.data.item(), inputs.size(0))
             top5.update(prec5.data.item(), inputs.size(0))
             # display training loss & acc every DISP_FREQ
-            if ((batch + 1) % DISP_FREQ == 0) or batch == 0:
+            if ((batch + 1) % DISP_FREQ == 0) or batch == cfg['START_EPOCH'] * len(train_loader):
                 print("=" * 60)
                 print('Epoch {}/{} Batch {}/{}\t'
                                 'Training Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -337,7 +348,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                     #ori_backbone.eval()
                     #x = torch.randn(1,3,112,112).cuda()
                     #traced_cell = torch.jit.trace(ori_backbone, (x))
-                    #torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "Epoch_{}_Time_{}_checkpoint.pth".format(epoch + 1, get_time())))
+                    #torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "latest.pt"))
             sys.stdout.flush()
             batch += 1 # batch index
         print("=" * 60)

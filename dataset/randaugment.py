@@ -198,5 +198,5 @@ class BottomCrop:
             else:
                 return transforms.functional.resized_crop(img, 12, 6, 100, 100, 112) 
         else:
-            return transforms.functional.resized_crop(img, round(height / 19.0), round(width / 19.0), round(height * 17.0 / 19.0), round(width * 17.0 / 19.0), 112) 
+            return transforms.functional.resized_crop(img, height // 20.0, width // 20.0, (height * 18.0) // 20.0, (width * 18.0) // 20.0, 112) 
 

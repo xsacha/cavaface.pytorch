@@ -6,7 +6,7 @@ import os
 import sys
 import numpy as np
 import numpy.matlib
-import cPickle
+import pickle
 import sklearn
 import cv2
 import sys

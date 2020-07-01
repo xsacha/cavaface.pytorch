@@ -1,4 +1,4 @@
-from citrus_pytorch_infer import CitrusPytorchInfer
+from infer.citrus_pytorch_infer import CitrusPytorchInfer
 
 def get_infer(args):
     model_type = args.model_type
