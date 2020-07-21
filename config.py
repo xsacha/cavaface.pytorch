@@ -48,9 +48,6 @@ configurations = {
         NUM_WORKERS = 3,
         TEST_GPU_ID = [0,1,2],
 
-        USE_APEX = False,
-        SYNC_BN = False,
-
         # Data Augmentation
         RANDAUGMENT = False,
         RANDAUGMENT_N = 2, # random pick numer of aug typr form aug_list 

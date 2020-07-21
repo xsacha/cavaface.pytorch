@@ -34,9 +34,6 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from torch.cuda.amp import GradScaler, autocast
-#import apex
-#from apex.parallel import DistributedDataParallel as DDP
-#from apex import amp
 from util.flops_counter import *
 from optimizer.lr_scheduler import *
 
@@ -88,9 +85,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     WARMUP_EPOCH = cfg['WARMUP_EPOCH']
     WARMUP_LR = cfg['WARMUP_LR']
     NUM_EPOCH = cfg['NUM_EPOCH']
-    USE_APEX = cfg['USE_APEX']
     EVAL_FREQ = cfg['EVAL_FREQ']
-    SYNC_BN = cfg['SYNC_BN']
     print("=" * 60)
     print("Overall Configurations:")
     print(cfg)
@@ -226,15 +221,8 @@ def main_worker(gpu, ngpus_per_node, cfg):
     #    traced_cell = torch.jit.trace(ori_backbone, (x))
     #    torch.jit.save(traced_cell, "latest.pt")
 
-    if SYNC_BN:
-        backbone = apex.parallel.convert_syncbn_model(backbone)
-    if USE_APEX:
-        [backbone, head], optimizer = amp.initialize([backbone, head], optimizer, opt_level='O1')
-        backbone = DDP(backbone)
-        head = DDP(head)
-    else:
-        backbone = torch.nn.parallel.DistributedDataParallel(backbone, device_ids=[cfg['GPU']])
-        head = torch.nn.parallel.DistributedDataParallel(head, device_ids=[cfg['GPU']])
+    backbone = torch.nn.parallel.DistributedDataParallel(backbone, device_ids=[cfg['GPU']])
+    head = torch.nn.parallel.DistributedDataParallel(head, device_ids=[cfg['GPU']])
 
      # checkpoint and tensorboard dir
     MODEL_ROOT = cfg['MODEL_ROOT'] # the root to buffer your checkpoints
@@ -289,12 +277,8 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 if ((batch + 1) % DISP_FREQ == 0) and batch != 0:
                     print("batch inference time", duration)
 
-            if USE_APEX:
-                with amp.scale_loss(lossx, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                #lossx.backward()
-                scaler.scale(lossx).backward()
+            #lossx.backward()
+            scaler.scale(lossx).backward()
             scaler.step(optimizer)
             #optimizer.step()
             scaler.update()
