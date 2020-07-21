@@ -187,16 +187,10 @@ class RandAugment:
 
 # Bottom crop of any 112x112, resized to 112 or center crop of any non-112 image
 class BottomCrop:
-    def __init__(self, r=False):
-       self.r = r
-
     def __call__(self, img):
         width, height = img.size
         if width == 112:
-            if self.r:
-                return transforms.functional.resized_crop(img, 6 + round(np.random.uniform(6)), 6, 100, 100, 112) 
-            else:
-                return transforms.functional.resized_crop(img, 12, 6, 100, 100, 112) 
+            return transforms.functional.resized_crop(img, 12, 6, 100, 100, 112) 
         else:
             return transforms.functional.resized_crop(img, height // 20.0, width // 20.0, (height * 18.0) // 20.0, (width * 18.0) // 20.0, 112) 
 

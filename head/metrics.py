@@ -47,7 +47,6 @@ class Softmax(nn.Module):
                 if m.bias is not None:
                     m.bias.data.zero_()
 
-
 class ArcFace(nn.Module):
     r"""Implement of ArcFace (https://arxiv.org/pdf/1801.07698v1.pdf):
         Args:
@@ -80,10 +79,9 @@ class ArcFace(nn.Module):
     def forward(self, embbedings, label):
         embbedings = l2_norm(embbedings, axis = 1)
         kernel_norm = l2_norm(self.kernel, axis = 0)
-        cos_theta = torch.mm(embbedings, kernel_norm)
-        cos_theta = cos_theta.clamp(-1, 1)  # for numerical stability
-        with torch.no_grad():
-            origin_cos = cos_theta.clone()
+        # clamp for numerical stability
+        cos_theta = torch.mm(embbedings, kernel_norm).clamp_(1, 1)
+
         target_logit = cos_theta[torch.arange(0, embbedings.size(0)), label].view(-1, 1)
 
         sin_theta = torch.sqrt(1.0 - torch.pow(target_logit, 2))
@@ -93,8 +91,13 @@ class ArcFace(nn.Module):
                 final_target_logit = torch.where(target_logit.float() > 0, cos_theta_m.float(), target_logit.float())
             else:
                 final_target_logit = torch.where(target_logit.float() > self.th, cos_theta_m.float(), target_logit.float() - self.mm)
+        #if self.easy_margin:
+        #    final_target_logit = torch.where(target_logit.float() > 0, cos_theta_m, target_logit)
+        #else:
+        #    final_target_logit = torch.where(target_logit > self.th, cos_theta_m, target_logit - self.mm)
 
-        cos_theta.scatter_(1, label.view(-1, 1).long(), final_target_logit)
+        cos_theta.scatter_(1, label.view(-1, 1).long(), final_target_logit.half())
+        #cos_theta.scatter_(1, label.view(-1, 1).long(), final_target_logit)
         output = cos_theta * self.s
         return output
 
@@ -343,10 +346,7 @@ class CurricularFace(nn.Module):
     def forward(self, embbedings, label):
         embbedings = l2_norm(embbedings, axis = 1)
         kernel_norm = l2_norm(self.kernel, axis = 0)
-        cos_theta = torch.mm(embbedings, kernel_norm)
-        cos_theta = cos_theta.clamp(-1, 1)  # for numerical stability
-        with torch.no_grad():
-            origin_cos = cos_theta.clone()
+        cos_theta = torch.mm(embbedings, kernel_norm).clamp_(-1, 1)
         target_logit = cos_theta[torch.arange(0, embbedings.size(0)), label].view(-1, 1)
 
         sin_theta = torch.sqrt(1.0 - torch.pow(target_logit, 2))

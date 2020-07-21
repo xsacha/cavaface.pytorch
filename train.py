@@ -34,9 +34,9 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from torch.cuda.amp import GradScaler, autocast
-import apex
-from apex.parallel import DistributedDataParallel as DDP
-from apex import amp
+#import apex
+#from apex.parallel import DistributedDataParallel as DDP
+#from apex import amp
 from util.flops_counter import *
 from optimizer.lr_scheduler import *
 
@@ -97,9 +97,8 @@ def main_worker(gpu, ngpus_per_node, cfg):
     print("=" * 60)
     transform_list = [
                     #transforms.RandomAffine(0, shear=(10, 5)),
-                    #BottomCrop(r=False),
-                    transforms.Resize(112),
-                    transforms.ColorJitter(brightness=0.05, contrast=0.05, saturation=0.05),
+                    #transforms.Resize(112),
+                    transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
@@ -244,6 +243,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     os.makedirs(MODEL_ROOT, exist_ok=True)
     os.makedirs(LOG_ROOT, exist_ok=True)
 
+    scaler = torch.cuda.amp.GradScaler()
     writer = SummaryWriter(LOG_ROOT) # writer for buffering intermedium results
     # train
     batch = cfg['START_EPOCH'] * len(train_loader)  # batch index
@@ -264,7 +264,6 @@ def main_worker(gpu, ngpus_per_node, cfg):
             # compute output
             start_time=time.time()
             if (batch + 1) % EVAL_FREQ == 0 or batch == cfg['START_EPOCH'] * len(train_loader): 
-                #grid = torchvision.utils.make_grid(inputs)
                 writer.add_image('images', de_preprocess(inputs[0]), batch + 1)
             inputs = inputs.cuda(cfg['GPU'], non_blocking=True)
             labels = labels.cuda(cfg['GPU'], non_blocking=True)
@@ -294,8 +293,11 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 with amp.scale_loss(lossx, optimizer) as scaled_loss:
                     scaled_loss.backward()
             else:
-                lossx.backward()
-            optimizer.step()
+                #lossx.backward()
+                scaler.scale(lossx).backward()
+            scaler.step(optimizer)
+            #optimizer.step()
+            scaler.update()
 
             # measure accuracy and record loss
             prec1, prec5 = accuracy(outputs.data, labels, topk = (1, 5)) if HEAD_NAME != 'CircleLoss' else accuracy(features.data, labels, topk = (1, 5))
