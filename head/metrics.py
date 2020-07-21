@@ -80,7 +80,7 @@ class ArcFace(nn.Module):
         embbedings = l2_norm(embbedings, axis = 1)
         kernel_norm = l2_norm(self.kernel, axis = 0)
         # clamp for numerical stability
-        cos_theta = torch.mm(embbedings, kernel_norm).clamp_(1, 1)
+        cos_theta = torch.mm(embbedings, kernel_norm).clamp_(-1, 1)
 
         target_logit = cos_theta[torch.arange(0, embbedings.size(0)), label].view(-1, 1)
 
