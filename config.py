@@ -10,20 +10,20 @@ configurations = {
         MODEL_ROOT = 'models', # the root to buffer your checkpoints
         LOG_ROOT = 'log', # the root to log your train/val status
         IS_RESUME = True,
-        BACKBONE_RESUME_ROOT = "models/Backbone_AttentionNet_IR_92_Epoch_1_Time_2020-07-21-16-46_checkpoint.pth",
-        HEAD_RESUME_ROOT = "models/Head_ArcFace_Epoch_1_Time_2020-07-21-16-46_checkpoint.pth",
+        BACKBONE_RESUME_ROOT = "models/Backbone_AttentionNet_IR_92_Epoch_1_Time_2020-07-22-03-15_checkpoint.pth",
+        HEAD_RESUME_ROOT = "models/Head_CurricularFace_Epoch_1_Time_2020-07-22-03-15_checkpoint.pth",
         
         BACKBONE_NAME = 'AttentionNet_IR_92', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
                                 #'AttentionNet_IR_56', 'AttentionNet_IRSE_56','AttentionNet_IR_92', 'AttentionNet_IRSE_92']
-        HEAD_NAME = "ArcFace", # support:  ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax', 'ArcNegFace', 'CurricularFace', 'SVX']
+        HEAD_NAME = "CurricularFace", # support:  ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax', 'ArcNegFace', 'CurricularFace', 'SVX']
         LOSS_NAME = 'Softmax', # support: [''Softmax', Focal', 'HardMining', 'LabelSmooth']
         
         INPUT_SIZE = [112, 112], # support: [112, 112] and [224, 224]
         RGB_MEAN = [0.5, 0.5, 0.5], # for normalize inputs to [-1, 1]
         RGB_STD = [0.5, 0.5, 0.5],
         EMBEDDING_SIZE = 512, # feature dimension
-        BATCH_SIZE = 288,
+        BATCH_SIZE = 256,
         EVAL_FREQ = 4600, #for ms1m, batch size 1024, EVAL_FREQ=2000
         DROP_LAST = True, # whether drop the last batch to ensure consistent batch_norm statistics
         
