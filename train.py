@@ -113,7 +113,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     NUM_CLASS = len(train_loader.dataset.classes)
     print("Number of Training Classes: {}".format(NUM_CLASS))
 
-    lfw, cfp_fp, agedb_30, vgg2_fp, lfw_issame, cfp_fp_issame, agedb_30_issame, vgg2_fp_issame = get_val_data(VAL_DATA_ROOT)
+    lfw, cfp_fp, agedb_30, nist, multiracial, challenging, muct, lfw_issame, cfp_fp_issame, agedb_30_issame, nist_issame, multiracial_issame, challenging_issame, muct_issame = get_val_data(VAL_DATA_ROOT)
 
     #======= model & loss & optimizer =======#
     BACKBONE_DICT = {'MobileFaceNet': MobileFaceNet,
@@ -206,7 +206,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
             if os.path.isfile(HEAD_RESUME_ROOT):
                 print("Loading Head Checkpoint '{}'".format(HEAD_RESUME_ROOT))
                 checkpoint = torch.load(HEAD_RESUME_ROOT, map_location=loc)
-                cfg['START_EPOCH'] = 0 #checkpoint['EPOCH']
+                cfg['START_EPOCH'] = checkpoint['EPOCH']
                 head.load_state_dict(checkpoint['HEAD'])
                 optimizer.load_state_dict(checkpoint['OPTIMIZER'])
                 del(checkpoint)
@@ -308,12 +308,28 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 print("Perform Evaluation on LFW, CFP_FP, AgeD and VGG2_FP, and Save Checkpoints...")
                 accuracy_lfw, best_threshold_lfw, roc_curve_lfw = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, lfw, lfw_issame)
                 buffer_val(writer, "LFW", accuracy_lfw, best_threshold_lfw, roc_curve_lfw, batch + 1)
-                accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, cfp_fp, cfp_fp_issame)
-                buffer_val(writer, "CFP_FP", accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp, batch + 1)
-                accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30 = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, agedb_30, agedb_30_issame)
-                buffer_val(writer, "AgeDB", accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30, batch + 1)
-                accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, vgg2_fp, vgg2_fp_issame)
-                buffer_val(writer, "VGGFace2_FP", accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp, batch + 1)
+
+                #accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, cfp_fp, cfp_fp_issame)
+                #buffer_val(writer, "CFP_FP", accuracy_cfp_fp, best_threshold_cfp_fp, roc_curve_cfp_fp, batch + 1)
+
+                #accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30 = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, agedb_30, agedb_30_issame)
+                #buffer_val(writer, "AgeDB", accuracy_agedb_30, best_threshold_agedb_30, roc_curve_agedb_30, batch + 1)
+
+                #accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, vgg2_fp, vgg2_fp_issame)
+                #buffer_val(writer, "VGGFace2_FP", accuracy_vgg2_fp, best_threshold_vgg2_fp, roc_curve_vgg2_fp, batch + 1)
+
+                accuracy_nist, best_threshold_nist, roc_curve_nist = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, nist, nist_issame)
+                buffer_val(writer, "NIST", accuracy_nist, best_threshold_nist, roc_curve_nist, batch + 1)
+
+                accuracy_challenging, best_threshold_challenging, roc_curve_challenging = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, challenging, challenging_is_same)
+                buffer_val(writer, "Challenging", accuracy_challenging, best_threshold_challenging, roc_curve_challenging, batch + 1)
+
+                accuracy_multiracial, best_threshold_multiracial, roc_curve_multiracial = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, multiracial, multiracial_issame)
+                buffer_val(writer, "Multiracial", accuracy_multiracial, best_threshold_multiracial, roc_curve_multiracial, batch + 1)
+
+                accuracy_muct, best_threshold_muct, roc_curve_muct = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, muct, muct_issame)
+                buffer_val(writer, "MUCT", accuracy_muct, best_threshold_muct, roc_curve_muct, batch + 1)
+
                 writer.add_scalar("Training_Loss", losses.avg, batch + 1)
                 writer.add_scalar("Training_Accuracy", top1.avg, batch + 1)
                 writer.add_scalar("Top5", top5.avg, batch+1)

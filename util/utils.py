@@ -35,11 +35,17 @@ def get_val_data(data_path):
     lfw, lfw_issame = get_val_pair(data_path, 'lfw')
     cfp_fp, cfp_fp_issame = get_val_pair(data_path, 'cfp_fp')
     agedb_30, agedb_30_issame = get_val_pair(data_path, 'agedb_30')
-    calfw, calfw_issame = get_val_pair(data_path, 'calfw')
-    cplfw, cplfw_issame = get_val_pair(data_path, 'cplfw')
-    vgg2_fp, vgg2_fp_issame = get_val_pair(data_path, 'vgg2_fp')
+    #calfw, calfw_issame = get_val_pair(data_path, 'calfw')
+    #cplfw, cplfw_issame = get_val_pair(data_path, 'cplfw')
+    #vgg2_fp, vgg2_fp_issame = get_val_pair(data_path, 'vgg2_fp')
+    
+    # NEW
+    nist, nist_issame = get_val_pair(data_path, 'nist')
+    multiracial, multiracial_issame = get_val_pair(data_path, 'multiracial')
+    challenging, challenging_issame = get_val_pair(data_path, 'challenging')
+    muct, muct_issame = get_val_pair(data_path, 'muct')
 
-    return lfw, cfp_fp, agedb_30, vgg2_fp, lfw_issame, cfp_fp_issame, agedb_30_issame, vgg2_fp_issame 
+    return lfw, cfp_fp, agedb_30, nist, multiracial, challenging, muct, lfw_issame, cfp_fp_issame, agedb_30_issame, nist_issame, multiracial_issame, challenging_issame, muct_issame 
 
 def separate_irse_bn_paras(modules):
     if not isinstance(modules, list):
@@ -130,23 +136,23 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
         while idx + batch_size <= len(carray):
             batch = torch.tensor(carray[idx:idx + batch_size][:, [2, 1, 0], :, :])
             if tta:
-                ccropped = ccrop_batch(batch)
+                ccropped = batch #ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
                 emb_batch = backbone(ccropped.cuda()).cpu() + backbone(fliped.cuda()).cpu()
                 embeddings[idx:idx + batch_size] = l2_norm(emb_batch)
             else:
-                ccropped = ccrop_batch(batch)
+                ccropped = batch #ccrop_batch(batch)
                 embeddings[idx:idx + batch_size] = l2_norm(backbone(ccropped.cuda())).cpu()
             idx += batch_size
         if idx < len(carray):
             batch = torch.tensor(carray[idx:][:, [2, 1, 0], :, :])
             if tta:
-                ccropped = ccrop_batch(batch)
+                ccropped = batch #ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
                 emb_batch = backbone(ccropped.cuda()).cpu() + backbone(fliped.cuda()).cpu()
                 embeddings[idx:] = l2_norm(emb_batch)
             else:
-                ccropped = ccrop_batch(batch)
+                ccropped = batch #ccrop_batch(batch)
                 embeddings[idx:] = l2_norm(backbone(ccropped.cuda())[0]).cpu()
 
     tpr, fpr, accuracy, best_thresholds, bad_case = evaluate(embeddings, issame, nrof_folds)
