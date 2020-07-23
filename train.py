@@ -48,10 +48,6 @@ def set_seed(seed):
 
 def main():
     cfg = configurations[1]
-    SEED = cfg['SEED'] # random seed for reproduce results
-    set_seed(int(SEED))
-    torch.backends.cudnn.benchmark = True
-    torch.backends.cudnn.deterministic = True
     ngpus_per_node = len(cfg['GPU'])
     world_size = cfg['WORLD_SIZE']
     cfg['WORLD_SIZE'] = ngpus_per_node * world_size
@@ -59,6 +55,10 @@ def main():
 
 def main_worker(gpu, ngpus_per_node, cfg):
     cfg['GPU'] = gpu
+    SEED = cfg['SEED'] # random seed for reproduce results
+    set_seed(SEED)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
     if gpu != 0:
         def print_pass(*args):
             pass

@@ -10,8 +10,8 @@ configurations = {
         MODEL_ROOT = 'models', # the root to buffer your checkpoints
         LOG_ROOT = 'log', # the root to log your train/val status
         IS_RESUME = True,
-        BACKBONE_RESUME_ROOT = "models/Backbone_AttentionNet_IR_92_Epoch_1_Time_2020-07-22-03-15_checkpoint.pth",
-        HEAD_RESUME_ROOT = "models/Head_CurricularFace_Epoch_1_Time_2020-07-22-03-15_checkpoint.pth",
+        BACKBONE_RESUME_ROOT = "models/Backbone_AttentionNet_IR_92_Epoch_1_Time_2020-07-22-19-26_checkpoint.pth",
+        HEAD_RESUME_ROOT = "models/Head_CurricularFace_Epoch_1_Time_2020-07-22-19-26_checkpoint.pth",
         
         BACKBONE_NAME = 'AttentionNet_IR_92', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
@@ -45,7 +45,7 @@ configurations = {
         GPU = [0,1,2], # specify your GPU ids
         DIST_BACKEND = 'nccl', # 'nccl', 'gloo'
         DIST_URL = 'tcp://localhost:23456',
-        NUM_WORKERS = 3,
+        NUM_WORKERS = 1,
         TEST_GPU_ID = [0,1,2],
 
         # Data Augmentation

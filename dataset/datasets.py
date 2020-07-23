@@ -96,7 +96,14 @@ class FaceDataset(Dataset):
         #sample = sample.convert("RGB")
         #using opencv
         sample = cv2.imread(path, cv2.IMREAD_COLOR)
-        sample = cv2.cvtColor(sample, cv2.COLOR_BGR2RGB)
+        try:
+            sample = cv2.cvtColor(sample, cv2.COLOR_BGR2RGB)
+        except:
+            with open("dodgy.txt", 'a') as f:
+                f.write(path + "\n")
+                f.flush()
+            sample = cv2.imread(path, cv2.IMREAD_COLOR)
+            sample = cv2.cvtColor(sample, cv2.COLOR_BGR2RGB)
         if sample.shape[0] > 112:
             sample = cv2.resize(sample, (112, 112), interpolation = cv2.INTER_AREA)
         else:
