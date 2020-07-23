@@ -120,9 +120,9 @@ def hflip_batch(imgs_tensor):
 
 
 ccrop = transforms.Compose([
-            de_preprocess,
+            #de_preprocess,
             transforms.ToPILImage(),
-            BottomCrop(),
+            #BottomCrop(),
             transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])
@@ -136,23 +136,23 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
         while idx + batch_size <= len(carray):
             batch = torch.tensor(carray[idx:idx + batch_size][:, [2, 1, 0], :, :])
             if tta:
-                ccropped = batch #ccrop_batch(batch)
+                ccropped = ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
                 emb_batch = backbone(ccropped.cuda()).cpu() + backbone(fliped.cuda()).cpu()
                 embeddings[idx:idx + batch_size] = l2_norm(emb_batch)
             else:
-                ccropped = batch #ccrop_batch(batch)
+                ccropped = ccrop_batch(batch)
                 embeddings[idx:idx + batch_size] = l2_norm(backbone(ccropped.cuda())).cpu()
             idx += batch_size
         if idx < len(carray):
             batch = torch.tensor(carray[idx:][:, [2, 1, 0], :, :])
             if tta:
-                ccropped = batch #ccrop_batch(batch)
+                ccropped = ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
                 emb_batch = backbone(ccropped.cuda()).cpu() + backbone(fliped.cuda()).cpu()
                 embeddings[idx:] = l2_norm(emb_batch)
             else:
-                ccropped = batch #ccrop_batch(batch)
+                ccropped = ccrop_batch(batch)
                 embeddings[idx:] = l2_norm(backbone(ccropped.cuda())[0]).cpu()
 
     tpr, fpr, accuracy, best_thresholds, bad_case = evaluate(embeddings, issame, nrof_folds)
