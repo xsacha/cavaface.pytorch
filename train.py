@@ -305,7 +305,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 lr = optimizer.param_groups[0]['lr']
                 print("Current lr", lr)
                 print("=" * 60)
-                print("Perform Evaluation on LFW, CFP_FP, AgeD and VGG2_FP, and Save Checkpoints...")
+                print("Perform Evaluation on LFW, NIST, Challenging, Multiracial, MUCT, and Save Checkpoints...")
                 accuracy_lfw, best_threshold_lfw, roc_curve_lfw = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, lfw, lfw_issame)
                 buffer_val(writer, "LFW", accuracy_lfw, best_threshold_lfw, roc_curve_lfw, batch + 1)
 
@@ -321,7 +321,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 accuracy_nist, best_threshold_nist, roc_curve_nist = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, nist, nist_issame)
                 buffer_val(writer, "NIST", accuracy_nist, best_threshold_nist, roc_curve_nist, batch + 1)
 
-                accuracy_challenging, best_threshold_challenging, roc_curve_challenging = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, challenging, challenging_is_same)
+                accuracy_challenging, best_threshold_challenging, roc_curve_challenging = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, challenging, challenging_issame)
                 buffer_val(writer, "Challenging", accuracy_challenging, best_threshold_challenging, roc_curve_challenging, batch + 1)
 
                 accuracy_multiracial, best_threshold_multiracial, roc_curve_multiracial = perform_val(EMBEDDING_SIZE, per_batch_size, backbone, multiracial, multiracial_issame)

@@ -123,7 +123,7 @@ ccrop = transforms.Compose([
             #de_preprocess,
             #transforms.ToPILImage(),
             #BottomCrop(),
-            transforms.ToTensor(),
+            #transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])
 
@@ -134,7 +134,7 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
     embeddings = np.zeros([len(carray), embedding_size])
     with torch.no_grad():
         while idx + batch_size <= len(carray):
-            batch = Image.fromarray(carray[idx:idx + batch_size][:, [2, 1, 0], :, :])
+            batch = torch.from_numpy(carray[idx:idx + batch_size]) / 256.0
             if tta:
                 ccropped = ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
@@ -145,7 +145,7 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
                 embeddings[idx:idx + batch_size] = l2_norm(backbone(ccropped.cuda())).cpu()
             idx += batch_size
         if idx < len(carray):
-            batch = Image.fromarray(carray[idx:][:, [2, 1, 0], :, :])
+            batch = torch.from_numpy(carray[idx:]) / 256.0
             if tta:
                 ccropped = ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
