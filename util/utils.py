@@ -33,8 +33,8 @@ def get_val_pair(path, name):
 
 def get_val_data(data_path):
     lfw, lfw_issame = get_val_pair(data_path, 'lfw')
-    cfp_fp, cfp_fp_issame = get_val_pair(data_path, 'cfp_fp')
-    agedb_30, agedb_30_issame = get_val_pair(data_path, 'agedb_30')
+    #cfp_fp, cfp_fp_issame = get_val_pair(data_path, 'cfp_fp')
+    #agedb_30, agedb_30_issame = get_val_pair(data_path, 'agedb_30')
     #calfw, calfw_issame = get_val_pair(data_path, 'calfw')
     #cplfw, cplfw_issame = get_val_pair(data_path, 'cplfw')
     #vgg2_fp, vgg2_fp_issame = get_val_pair(data_path, 'vgg2_fp')
@@ -45,7 +45,7 @@ def get_val_data(data_path):
     challenging, challenging_issame = get_val_pair(data_path, 'challenging')
     muct, muct_issame = get_val_pair(data_path, 'muct')
 
-    return lfw, cfp_fp, agedb_30, nist, multiracial, challenging, muct, lfw_issame, cfp_fp_issame, agedb_30_issame, nist_issame, multiracial_issame, challenging_issame, muct_issame 
+    return lfw, nist, multiracial, challenging, muct, lfw_issame, nist_issame, multiracial_issame, challenging_issame, muct_issame 
 
 def separate_irse_bn_paras(modules):
     if not isinstance(modules, list):
@@ -134,7 +134,7 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
     embeddings = np.zeros([len(carray), embedding_size])
     with torch.no_grad():
         while idx + batch_size <= len(carray):
-            batch = torch.from_numpy(carray[idx:idx + batch_size]) / 256.0
+            batch = torch.from_numpy(carray[idx:idx + batch_size]) / 255.0
             if tta:
                 ccropped = ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)
@@ -145,7 +145,7 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
                 embeddings[idx:idx + batch_size] = l2_norm(backbone(ccropped.cuda())).cpu()
             idx += batch_size
         if idx < len(carray):
-            batch = torch.from_numpy(carray[idx:]) / 256.0
+            batch = torch.from_numpy(carray[idx:]) / 255.0
             if tta:
                 ccropped = ccrop_batch(batch)
                 fliped = hflip_batch(ccropped)

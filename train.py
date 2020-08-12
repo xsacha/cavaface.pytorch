@@ -93,7 +93,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     transform_list = [
                     #transforms.RandomAffine(0, shear=(10, 5)),
                     #transforms.Resize(112),
-                    transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1),
+                    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
@@ -113,7 +113,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     NUM_CLASS = len(train_loader.dataset.classes)
     print("Number of Training Classes: {}".format(NUM_CLASS))
 
-    lfw, cfp_fp, agedb_30, nist, multiracial, challenging, muct, lfw_issame, cfp_fp_issame, agedb_30_issame, nist_issame, multiracial_issame, challenging_issame, muct_issame = get_val_data(VAL_DATA_ROOT)
+    lfw, nist, multiracial, challenging, muct, lfw_issame, nist_issame, multiracial_issame, challenging_issame, muct_issame = get_val_data(VAL_DATA_ROOT)
 
     #======= model & loss & optimizer =======#
     BACKBONE_DICT = {'MobileFaceNet': MobileFaceNet,
@@ -335,7 +335,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                 writer.add_scalar("Top5", top5.avg, batch+1)
         
                 writer.flush()
-                print("Epoch {}/{}, Evaluation: LFW Acc: {}, CFP_FP Acc: {}, AgeDB Acc: {}, VGG2_FP Acc: {}".format(epoch + 1, NUM_EPOCH, accuracy_lfw, accuracy_cfp_fp, accuracy_agedb_30, accuracy_vgg2_fp))
+                print("Epoch {}/{}, Evaluation: LFW Acc: {}, NIST Acc: {}, Challenging Acc: {}, Multiracial Acc: {} MUCT Acc: {}".format(epoch + 1, NUM_EPOCH, accuracy_lfw, accuracy_nist, accuracy_challenging, accuracy_multiracial, accuracy_muct))
                 print("=" * 60)
 
                 print("=" * 60)
