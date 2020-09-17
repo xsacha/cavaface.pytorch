@@ -124,6 +124,7 @@ ccrop = transforms.Compose([
             #transforms.ToPILImage(),
             #BottomCrop(),
             #transforms.ToTensor(),
+            transforms.Resize(190, 190),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])
 
@@ -172,6 +173,8 @@ def gen_plot(fpr, tpr):
     plt.figure()
     plt.xlabel("FPR", fontsize = 14)
     plt.ylabel("TPR", fontsize = 14)
+    plt.xlim([0.0, 0.2])
+    plt.ylim([0.3, 1.0])
     plt.title("ROC Curve", fontsize = 14)
     plot = plt.plot(fpr, tpr, linewidth = 2)
     buf = io.BytesIO()

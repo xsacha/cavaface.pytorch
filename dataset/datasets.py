@@ -104,10 +104,10 @@ class FaceDataset(Dataset):
                 f.flush()
             sample = cv2.imread(path, cv2.IMREAD_COLOR)
             sample = cv2.cvtColor(sample, cv2.COLOR_BGR2RGB)
-        if sample.shape[0] > 112:
-            sample = cv2.resize(sample, (112, 112), interpolation = cv2.INTER_AREA)
+        if sample.shape[0] > 190:
+            sample = cv2.resize(sample, (190, 190), interpolation = cv2.INTER_AREA)
         else:
-            sample =  cv2.resize(sample, (112, 112), interpolation = cv2.INTER_CUBIC) 
+            sample =  cv2.resize(sample, (190, 190), interpolation = cv2.INTER_CUBIC) 
         sample = Image.fromarray(sample)
         if self.transform is not None:
             sample = self.transform(sample)

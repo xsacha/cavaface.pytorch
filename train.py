@@ -22,7 +22,7 @@ from backbone.resnet import *
 from backbone.resnet_irse import *
 from backbone.mobilefacenet import *
 from backbone.resattnet import *
-from backbone.efficientpolyface import *
+from backbone.efficientnet import *
 from backbone.resnest import *
 from head.metrics import *
 from loss.loss import *
@@ -36,6 +36,7 @@ from tqdm import tqdm
 from torch.cuda.amp import GradScaler, autocast
 from util.flops_counter import *
 from optimizer.lr_scheduler import *
+#import kornia
 
 
 
@@ -52,6 +53,7 @@ def main():
     world_size = cfg['WORLD_SIZE']
     cfg['WORLD_SIZE'] = ngpus_per_node * world_size
     mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, cfg))
+    #main_worker(0, 1, cfg)
 
 def main_worker(gpu, ngpus_per_node, cfg):
     cfg['GPU'] = gpu
@@ -93,9 +95,13 @@ def main_worker(gpu, ngpus_per_node, cfg):
     transform_list = [
                     #transforms.RandomAffine(0, shear=(10, 5)),
                     #transforms.Resize(112),
-                    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+                    #transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
                     transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
+                    #kornia.augmentation.RandomSharpness(0.5),
+                    #transforms.RandomApply([kornia.filters.GaussianBlur2d((3,3), (1.5, 1.5))], p=0.1),
+                    #transforms.RandomApply([kornia.filters.MotionBlur(3, 17., 0.5)], p=0.2),
+                    #transforms.Lambda(lambda x: x.squeeze(0)), 
                     transforms.Normalize(mean = RGB_MEAN,std = RGB_STD),]
     if cfg['RANDOM_ERASING']:
         transform_list.append(RandomErasing())
@@ -120,14 +126,14 @@ def main_worker(gpu, ngpus_per_node, cfg):
                      'ResNet_50': ResNet_50, 'ResNet_101': ResNet_101, 'ResNet_152': ResNet_152,
                      'IR_50': IR_50, 'IR_100': IR_100, 'IR_101': IR_101, 'IR_152': IR_152, 'IR_185': IR_185, 'IR_200': IR_200,
                      'IR_SE_50': IR_SE_50, 'IR_SE_100': IR_SE_100, 'IR_SE_101': IR_SE_101, 'IR_SE_152': IR_SE_152, 'IR_SE_185': IR_SE_185, 'IR_SE_200': IR_SE_200,
+                     'EfficientNet': efficientnet,
                      'AttentionNet_IR_56': AttentionNet_IR_56,'AttentionNet_IRSE_56': AttentionNet_IRSE_56,'AttentionNet_IR_92': AttentionNet_IR_92,'AttentionNet_IRSE_92': AttentionNet_IRSE_92,
-                     #'PolyNet': PolyNet, 'PolyFace': PolyFace, 'EfficientPolyFace': EfficientPolyFace,
                      'ResNeSt_50': resnest50, 'ResNeSt_101': resnest101, 'ResNeSt_100': resnest100
                     } #'HRNet_W30': HRNet_W30, 'HRNet_W32': HRNet_W32, 'HRNet_W40': HRNet_W40, 'HRNet_W44': HRNet_W44, 'HRNet_W48': HRNet_W48, 'HRNet_W64': HRNet_W64
 
     BACKBONE_NAME = cfg['BACKBONE_NAME']
     INPUT_SIZE = cfg['INPUT_SIZE']
-    assert INPUT_SIZE == [112, 112]
+    assert INPUT_SIZE == [190, 190]
     backbone = BACKBONE_DICT[BACKBONE_NAME](INPUT_SIZE)
     print("=" * 60)
     print(backbone)
@@ -348,7 +354,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                     torch.save(save_dict, os.path.join(MODEL_ROOT, "Head_{}_Epoch_{}_Time_{}_checkpoint.pth".format(HEAD_NAME, epoch + 1, get_time())))
                     #ori_backbone.load_state_dict(backbone.module.state_dict())
                     #ori_backbone.eval()
-                    #x = torch.randn(1,3,112,112).cuda()
+                    #x = torch.randn(1,3,190,190).cuda()
                     #traced_cell = torch.jit.trace(ori_backbone, (x))
                     #torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "latest.pt"))
             sys.stdout.flush()
