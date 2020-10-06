@@ -212,7 +212,7 @@ class Flatten(Module):
 
 
 def l2_norm(input, axis=1):
-    norm = torch.norm(input, 2, axis, True)
+    norm = torch.linalg.norm(input, 2, axis, True)
     output = torch.div(input, norm)
 
     return output
@@ -221,7 +221,7 @@ def l2_norm(input, axis=1):
 class SEModule(Module):
     def __init__(self, channels, reduction):
         super(SEModule, self).__init__()
-        self.avg_pool = AdaptiveAvgPool2d(1)
+        #self.avg_pool = AdaptiveAvgPool2d(1)
         self.fc1 = Conv2d(channels, channels // reduction, kernel_size=1, padding=0, bias=False)
 
         nn.init.xavier_uniform_(self.fc1.weight.data)
@@ -233,6 +233,7 @@ class SEModule(Module):
 
     def forward(self, x):
         module_input = x
+        x = x.mean((2, 3), keepdim=True)
         x = self.avg_pool(x)
         x = self.fc1(x)
         x = self.relu(x)

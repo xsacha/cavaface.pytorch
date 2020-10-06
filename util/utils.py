@@ -20,7 +20,7 @@ def get_time():
 
 
 def l2_norm(input, axis = 1):
-    norm = torch.norm(input, 2, axis, True)
+    norm = torch.linalg.norm(input, 2, axis, True)
     output = torch.div(input, norm)
     return output
 
@@ -124,7 +124,7 @@ ccrop = transforms.Compose([
             #transforms.ToPILImage(),
             #BottomCrop(),
             #transforms.ToTensor(),
-            transforms.Resize(190, 190),
+            #transforms.Resize(190, 190),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
         ])
 
@@ -223,7 +223,7 @@ def accuracy(output, target, topk=(1,)):
 
     res = []
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
+        correct_k = correct[:k].reshape((-1,)).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
 
     return res

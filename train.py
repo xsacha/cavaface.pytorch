@@ -133,7 +133,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
 
     BACKBONE_NAME = cfg['BACKBONE_NAME']
     INPUT_SIZE = cfg['INPUT_SIZE']
-    assert INPUT_SIZE == [190, 190]
+    assert INPUT_SIZE == [112, 112]
     backbone = BACKBONE_DICT[BACKBONE_NAME](INPUT_SIZE)
     print("=" * 60)
     print(backbone)
@@ -240,6 +240,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     scaler = torch.cuda.amp.GradScaler()
     writer = SummaryWriter(LOG_ROOT) # writer for buffering intermedium results
     # train
+    #cfg['START_EPOCH'] = 0
     batch = cfg['START_EPOCH'] * len(train_loader)  # batch index
     for epoch in range(cfg['START_EPOCH'], cfg['NUM_EPOCH']):
         train_sampler.set_epoch(epoch)
@@ -354,7 +355,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                     torch.save(save_dict, os.path.join(MODEL_ROOT, "Head_{}_Epoch_{}_Time_{}_checkpoint.pth".format(HEAD_NAME, epoch + 1, get_time())))
                     #ori_backbone.load_state_dict(backbone.module.state_dict())
                     #ori_backbone.eval()
-                    #x = torch.randn(1,3,190,190).cuda()
+                    #x = torch.randn(1,3,112,112).cuda()
                     #traced_cell = torch.jit.trace(ori_backbone, (x))
                     #torch.jit.save(traced_cell, os.path.join(MODEL_ROOT, "latest.pt"))
             sys.stdout.flush()

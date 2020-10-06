@@ -4,14 +4,14 @@ configurations = {
     1: dict(
         SEED = 1337, # random seed for reproduce results
         
-        DATA_ROOT = '/mnt', # '/home/imagus/datasets/', # the parent root where your train/val/test data are stored
-        RECORD_DIR = '/mnt/record.txt', # '/home/imagus/datasets/record.txt', # the dataset record dir
+        DATA_ROOT = '/home/imagus/datasets/', # '/home/imagus/datasets/', # the parent root where your train/val/test data are stored
+        RECORD_DIR = '/home/imagus/datasets/record.txt', # '/home/imagus/datasets/record.txt', # the dataset record dir
         VAL_DATA_ROOT = '/home/imagus/datasets/data', # the parent root where your val/test data are stored
         MODEL_ROOT = '/mnt/models', # the root to buffer your checkpoints
         LOG_ROOT = '/mnt/log', # the root to log your train/val status
-        IS_RESUME = False,
-        BACKBONE_RESUME_ROOT = "",
-        HEAD_RESUME_ROOT = "",
+        IS_RESUME = True,
+        BACKBONE_RESUME_ROOT = "/mnt/models/Backbone_EfficientNet_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
+        HEAD_RESUME_ROOT = "/mnt/models/Head_CurricularFace_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
         
         BACKBONE_NAME = 'EfficientNet', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
@@ -19,15 +19,15 @@ configurations = {
         HEAD_NAME = "CurricularFace", # support:  ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax', 'ArcNegFace', 'CurricularFace', 'SVX']
         LOSS_NAME = 'Softmax', # support: [''Softmax', Focal', 'HardMining', 'LabelSmooth']
         
-        INPUT_SIZE = [190, 190], # support: [112, 112] and [224, 224]
+        INPUT_SIZE = [112, 112], # support: [112, 112] and [224, 224]
         RGB_MEAN = [0.5, 0.5, 0.5], # for normalize inputs to [-1, 1]
         RGB_STD = [0.5, 0.5, 0.5],
         EMBEDDING_SIZE = 512, # feature dimension
-        BATCH_SIZE = 64,
+        BATCH_SIZE = 128,
         EVAL_FREQ = 8000, #for ms1m, batch size 1024, EVAL_FREQ=2000
         DROP_LAST = True, # whether drop the last batch to ensure consistent batch_norm statistics
         
-        LR = 0.1, # initial LR
+        LR = 0.0001, # initial LR
         LR_SCHEDULER = 'cosine', # step/multi_step/cosine
         WARMUP_EPOCH = 0, 
         WARMUP_LR = 0.0,

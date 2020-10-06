@@ -255,7 +255,7 @@ class SphereFace(nn.Module):
         theta = cos_theta.data.acos()
         k = (self.m * theta / 3.14159265).floor()
         phi_theta = ((-1.0) ** k) * cos_m_theta - 2 * k
-        NormOfFeature = torch.norm(input, 2, 1)
+        NormOfFeature = torch.linalg.norm(input, 2, 1)
 
         # --------------------------- convert label to one-hot ---------------------------
         one_hot = torch.zeros(cos_theta.size())
@@ -275,7 +275,7 @@ class SphereFace(nn.Module):
                + ', m = ' + str(self.m) + ')'
 
 def l2_norm(input, axis = 1):
-    norm = torch.norm(input, 2, axis, True)
+    norm = torch.linalg.norm(input, 2, axis, True)
     output = torch.div(input, norm)
 
     return output
@@ -384,8 +384,8 @@ class ArcNegFace(nn.Module):
         self.weight.data.uniform_(-stdv, stdv)
 
     def forward(self, input, label):
-        ex = input / torch.norm(input, 2, 1, keepdim=True)
-        ew = self.weight / torch.norm(self.weight, 2, 1, keepdim=True)
+        ex = input / torch.linalg.norm(input, 2, 1, keepdim=True)
+        ew = self.weight / torch.linalg.norm(self.weight, 2, 1, keepdim=True)
         cos = torch.mm(ex, ew.t())
 
         a = torch.zeros_like(cos)

@@ -326,16 +326,15 @@ class EfficientNet(nn.Module):
             activation=activation))
         in_channels = final_block_channels
         #self.features.add_module("final_pool", nn.AdaptiveAvgPool2d(output_size=1))
-
-        '''
+        """ 
         self.output = nn.Sequential()
         if dropout_rate > 0.0:
             self.output.add_module("dropout", nn.Dropout(p=dropout_rate))
         self.output.add_module("fc", nn.Linear(
-            in_features=in_channels,
-            out_features=num_classes))
-        '''
-        self.output = GDC(512, embedding_size)
+            in_features=768,
+            out_features=embedding_size))
+        """
+        self.output = GDC(768, embedding_size)
         self._init_params()
 
     def _init_params(self):
@@ -356,7 +355,7 @@ def efficientnet(input_size, embedding_size=512, version='b4', **kwargs):
     """
     Create EfficientNet model with specific parameters.
     """
-    assert input_size[0] in [112]
+    #assert input_size[0] in [112]
     if version.endswith('b') or version.endswith('c'):
         version = version[:-1]
         tf_mode = True
@@ -387,12 +386,12 @@ def efficientnet(input_size, embedding_size=512, version='b4', **kwargs):
     elif version == "b4":
         in_size = (190, 190)
         depth_factor = 1.8
-        width_factor = 1.4
+        width_factor = 1.5
         dropout_rate = 0.4
     elif version == "b5":
         in_size = (228, 228)
         depth_factor = 2.2
-        width_factor = 1.6
+        width_factor = 1.5
         dropout_rate = 0.4
     elif version == "b6":
         in_size = (264, 264)
