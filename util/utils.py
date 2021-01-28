@@ -137,23 +137,23 @@ def perform_val(embedding_size, batch_size, backbone, carray, issame, nrof_folds
         while idx + batch_size <= len(carray):
             batch = torch.from_numpy(carray[idx:idx + batch_size]) / 255.0
             if tta:
-                ccropped = ccrop_batch(batch)
+                ccropped = ccrop_batch(batch).half()
                 fliped = hflip_batch(ccropped)
                 emb_batch = backbone(ccropped.cuda()).cpu() + backbone(fliped.cuda()).cpu()
                 embeddings[idx:idx + batch_size] = l2_norm(emb_batch)
             else:
-                ccropped = ccrop_batch(batch)
+                ccropped = ccrop_batch(batch).half()
                 embeddings[idx:idx + batch_size] = l2_norm(backbone(ccropped.cuda())).cpu()
             idx += batch_size
         if idx < len(carray):
             batch = torch.from_numpy(carray[idx:]) / 255.0
             if tta:
-                ccropped = ccrop_batch(batch)
+                ccropped = ccrop_batch(batch).half()
                 fliped = hflip_batch(ccropped)
                 emb_batch = backbone(ccropped.cuda()).cpu() + backbone(fliped.cuda()).cpu()
                 embeddings[idx:] = l2_norm(emb_batch)
             else:
-                ccropped = ccrop_batch(batch)
+                ccropped = ccrop_batch(batch).half()
                 embeddings[idx:] = l2_norm(backbone(ccropped.cuda())[0]).cpu()
 
     tpr, fpr, accuracy, best_thresholds, bad_case = evaluate(embeddings, issame, nrof_folds)

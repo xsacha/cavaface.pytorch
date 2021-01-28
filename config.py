@@ -10,10 +10,10 @@ configurations = {
         MODEL_ROOT = '/mnt/models', # the root to buffer your checkpoints
         LOG_ROOT = '/mnt/log', # the root to log your train/val status
         IS_RESUME = True,
-        BACKBONE_RESUME_ROOT = "/mnt/models/Backbone_EfficientNet_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
-        HEAD_RESUME_ROOT = "/mnt/models/Head_CurricularFace_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
+        BACKBONE_RESUME_ROOT = "/mnt/models/Backbone_AttentionNet_IR_92_Epoch_32_Time_2020-09-03-16-07_checkpoint.pth",
+        HEAD_RESUME_ROOT = "",#"/mnt/models/Head_CurricularFace_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
         
-        BACKBONE_NAME = 'EfficientNet', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
+        BACKBONE_NAME = 'AttentionNet_IR_92', # support: ['MobileFaceNet', 'ResNet_50', 'ResNet_101', 'ResNet_152', 
                                 #'IR_50', 'IR_101', 'IR_152', 'IR_SE_50', 'IR_SE_101', 'IR_SE_152',
                                 #'AttentionNet_IR_56', 'AttentionNet_IRSE_56','AttentionNet_IR_92', 'AttentionNet_IRSE_92']
         HEAD_NAME = "CurricularFace", # support:  ['Softmax', 'ArcFace', 'CosFace', 'SphereFace', 'Am_softmax', 'ArcNegFace', 'CurricularFace', 'SVX']

@@ -135,8 +135,8 @@ def main_worker(gpu, ngpus_per_node, cfg):
     INPUT_SIZE = cfg['INPUT_SIZE']
     assert INPUT_SIZE == [112, 112]
     backbone = BACKBONE_DICT[BACKBONE_NAME](INPUT_SIZE)
-    print("=" * 60)
-    print(backbone)
+    #print("=" * 60)
+    #print(backbone)
     print("{} Backbone Generated".format(BACKBONE_NAME))
     print("=" * 60)
     HEAD_DICT = {'Softmax': Softmax, 'ArcFace': ArcFace, 'Combined': Combined, 'CosFace': CosFace, 'SphereFace': SphereFace,
@@ -219,15 +219,90 @@ def main_worker(gpu, ngpus_per_node, cfg):
         else:
             print("No Checkpoint Found at '{}' and '{}'. Please Have a Check or Continue to Train from Scratch".format(BACKBONE_RESUME_ROOT, HEAD_RESUME_ROOT))
         print("=" * 60)
-    #ori_backbone = copy.deepcopy(backbone)
-    #with torch.no_grad():
-    #    ori_backbone.load_state_dict(backbone.state_dict())
-    #    ori_backbone.eval()
-    #    x = torch.randn(1,3,112,112).cuda()
-    #    traced_cell = torch.jit.trace(ori_backbone, (x))
-    #    torch.jit.save(traced_cell, "latest.pt")
+    ori_backbone = copy.deepcopy(backbone)
+    with torch.no_grad():
+        with autocast():
+            ori_backbone.load_state_dict(backbone.state_dict())
+            torch.quantization.fuse_modules(ori_backbone, [['input_layer.0', 'input_layer.1'],
+                                          ['residual_block1.res_layer.3', 'residual_block1.res_layer.4'],
+                                          ['attention_module1.share_residual_block.res_layer.3', 'attention_module1.share_residual_block.res_layer.4'],
+                                          ['attention_module1.trunk_branches.0.res_layer.3',     'attention_module1.trunk_branches.0.res_layer.4'],
+                                          ['attention_module1.trunk_branches.1.res_layer.3',     'attention_module1.trunk_branches.1.res_layer.4'],
+                                          ['attention_module1.mask_block1.res_layer.3',          'attention_module1.mask_block1.res_layer.4'],
+                                          ['attention_module1.skip_connect1.res_layer.3',        'attention_module1.skip_connect1.res_layer.4'],
+                                          ['attention_module1.mask_block2.res_layer.3',          'attention_module1.mask_block2.res_layer.4'],
+                                          ['attention_module1.skip_connect2.res_layer.3',        'attention_module1.skip_connect2.res_layer.4'],
+                                          ['attention_module1.mask_block3.0.res_layer.3',        'attention_module1.mask_block3.0.res_layer.4'],
+                                          ['attention_module1.mask_block3.1.res_layer.3',        'attention_module1.mask_block3.1.res_layer.4'],
+                                          ['attention_module1.mask_block4.res_layer.3',          'attention_module1.mask_block4.res_layer.4'],
+                                          ['attention_module1.mask_block5.res_layer.3',          'attention_module1.mask_block5.res_layer.4'],
+                                          #['attention_module1.mask_block6.0',                    'attention_module1.mask_block6.1'],
+                                          ['attention_module1.mask_block6.2',                    'attention_module1.mask_block6.3',                    'attention_module1.mask_block6.4'],
+                                          ['attention_module1.last_block.res_layer.3',           'attention_module1.last_block.res_layer.4'],
+                                          #['residual_block2.shortcut_layer.0', 'residual_block2.shortcut_layer.1'],
+                                          ['residual_block2.res_layer.3', 'residual_block2.res_layer.4'],
+                                          ['attention_module2.first_residual_blocks.res_layer.3','attention_module2.first_residual_blocks.res_layer.4'],
+                                          ['attention_module2.trunk_branches.0.res_layer.3',     'attention_module2.trunk_branches.0.res_layer.4'],
+                                          ['attention_module2.trunk_branches.1.res_layer.3',     'attention_module2.trunk_branches.1.res_layer.4'],
+                                          ['attention_module2.softmax1_blocks.res_layer.3',      'attention_module2.softmax1_blocks.res_layer.4'],
+                                          ['attention_module2.skip1_connection_residual_block.res_layer.3','attention_module2.skip1_connection_residual_block.res_layer.4'],
+                                          ['attention_module2.softmax2_blocks.0.res_layer.3',    'attention_module2.softmax2_blocks.0.res_layer.4'],
+                                          ['attention_module2.softmax2_blocks.1.res_layer.3',    'attention_module2.softmax2_blocks.1.res_layer.4'],
+                                          ['attention_module2.softmax3_blocks.res_layer.3',      'attention_module2.softmax3_blocks.res_layer.4'],
+                                          #['attention_module2.softmax4_blocks.0',                'attention_module2.softmax4_blocks.1'],
+                                          ['attention_module2.softmax4_blocks.2',                'attention_module2.softmax4_blocks.3',                'attention_module2.softmax4_blocks.4'],
+                                          ['attention_module2.last_blocks.res_layer.3',          'attention_module2.last_blocks.res_layer.4'],
+                                          ['attention_module2_2.first_residual_blocks.res_layer.3','attention_module2_2.first_residual_blocks.res_layer.4'],
+                                          ['attention_module2_2.trunk_branches.0.res_layer.3',     'attention_module2_2.trunk_branches.0.res_layer.4'],
+                                          ['attention_module2_2.trunk_branches.1.res_layer.3',     'attention_module2_2.trunk_branches.1.res_layer.4'],
+                                          ['attention_module2_2.softmax1_blocks.res_layer.3',      'attention_module2_2.softmax1_blocks.res_layer.4'],
+                                          ['attention_module2_2.skip1_connection_residual_block.res_layer.3','attention_module2_2.skip1_connection_residual_block.res_layer.4'],
+                                          ['attention_module2_2.softmax2_blocks.0.res_layer.3',    'attention_module2_2.softmax2_blocks.0.res_layer.4'],
+                                          ['attention_module2_2.softmax2_blocks.1.res_layer.3',    'attention_module2_2.softmax2_blocks.1.res_layer.4'],
+                                          ['attention_module2_2.softmax3_blocks.res_layer.3',      'attention_module2_2.softmax3_blocks.res_layer.4'],
+                                          #['attention_module2_2.softmax4_blocks.0',                'attention_module2_2.softmax4_blocks.1'],
+                                          ['attention_module2_2.softmax4_blocks.2',                'attention_module2_2.softmax4_blocks.3',                'attention_module2_2.softmax4_blocks.4'],
+                                          ['attention_module2_2.last_blocks.res_layer.3',          'attention_module2_2.last_blocks.res_layer.4'],
+                                          #['residual_block3.shortcut_layer.0', 'residual_block3.shortcut_layer.1'],
+                                          ['residual_block3.res_layer.3', 'residual_block3.res_layer.4'],
+                                          ['attention_module3.first_residual_blocks.res_layer.3','attention_module3.first_residual_blocks.res_layer.4'],
+                                          ['attention_module3.trunk_branches.0.res_layer.3',     'attention_module3.trunk_branches.0.res_layer.4'],
+                                          ['attention_module3.trunk_branches.1.res_layer.3',     'attention_module3.trunk_branches.1.res_layer.4'],
+                                          ['attention_module3.softmax1_blocks.0.res_layer.3',    'attention_module3.softmax1_blocks.0.res_layer.4'],
+                                          ['attention_module3.softmax1_blocks.1.res_layer.3',    'attention_module3.softmax1_blocks.1.res_layer.4'],
+                                          #['attention_module3.softmax2_blocks.0',                'attention_module3.softmax2_blocks.1'],
+                                          ['attention_module3.softmax2_blocks.2',                'attention_module3.softmax2_blocks.3',      'attention_module3.softmax2_blocks.4'],
+                                          ['attention_module3.last_blocks.res_layer.3',          'attention_module3.last_blocks.res_layer.4'],
+                                          ['attention_module3_2.first_residual_blocks.res_layer.3','attention_module3_2.first_residual_blocks.res_layer.4'],
+                                          ['attention_module3_2.trunk_branches.0.res_layer.3',     'attention_module3_2.trunk_branches.0.res_layer.4'],
+                                          ['attention_module3_2.trunk_branches.1.res_layer.3',     'attention_module3_2.trunk_branches.1.res_layer.4'],
+                                          ['attention_module3_2.softmax1_blocks.0.res_layer.3',    'attention_module3_2.softmax1_blocks.0.res_layer.4'],
+                                          ['attention_module3_2.softmax1_blocks.1.res_layer.3',    'attention_module3_2.softmax1_blocks.1.res_layer.4'],
+                                          #['attention_module3_2.softmax2_blocks.0',                'attention_module3_2.softmax2_blocks.1'],
+                                          ['attention_module3_2.softmax2_blocks.2',                'attention_module3_2.softmax2_blocks.3',      'attention_module3_2.softmax2_blocks.4'],
+                                          ['attention_module3_2.last_blocks.res_layer.3',          'attention_module3_2.last_blocks.res_layer.4'],
+                                          ['attention_module3_3.first_residual_blocks.res_layer.3','attention_module3_3.first_residual_blocks.res_layer.4'],
+                                          ['attention_module3_3.trunk_branches.0.res_layer.3',     'attention_module3_3.trunk_branches.0.res_layer.4'],
+                                          ['attention_module3_3.trunk_branches.1.res_layer.3',     'attention_module3_3.trunk_branches.1.res_layer.4'],
+                                          ['attention_module3_3.softmax1_blocks.0.res_layer.3',    'attention_module3_3.softmax1_blocks.0.res_layer.4'],
+                                          ['attention_module3_3.softmax1_blocks.1.res_layer.3',    'attention_module3_3.softmax1_blocks.1.res_layer.4'],
+                                          #['attention_module3_3.softmax2_blocks.0',                'attention_module3_3.softmax2_blocks.1'],
+                                          ['attention_module3_3.softmax2_blocks.2',                'attention_module3_3.softmax2_blocks.3',      'attention_module3_3.softmax2_blocks.4'],
+                                          ['attention_module3_3.last_blocks.res_layer.3',          'attention_module3_3.last_blocks.res_layer.4'],
+                                          ['residual_block4.shortcut_layer.0', 'residual_block4.shortcut_layer.1'],
+                                          ['residual_block4.res_layer.3', 'residual_block4.res_layer.4'],
+                                          ['residual_block5.res_layer.3', 'residual_block5.res_layer.4'],
+                                          ['residual_block6.res_layer.3', 'residual_block6.res_layer.4'],
+                                         ], inplace=True)
+            ori_backbone.eval()
+            print(ori_backbone)
+            x = torch.randn(1,3,112,112).cuda().half()
+            traced_cell = torch.jit.trace(ori_backbone, (x), check_trace=False)
+            traced_cell.half()
+            torch.jit.save(traced_cell, "latest.pt")
+            backbone = traced_cell
 
-    backbone = torch.nn.parallel.DistributedDataParallel(backbone, device_ids=[cfg['GPU']])
+    #backbone = torch.nn.parallel.DistributedDataParallel(backbone, device_ids=[cfg['GPU']])
     head = torch.nn.parallel.DistributedDataParallel(head, device_ids=[cfg['GPU']])
 
      # checkpoint and tensorboard dir
@@ -240,7 +315,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
     scaler = torch.cuda.amp.GradScaler()
     writer = SummaryWriter(LOG_ROOT) # writer for buffering intermedium results
     # train
-    #cfg['START_EPOCH'] = 0
+    cfg['START_EPOCH'] = 0
     batch = cfg['START_EPOCH'] * len(train_loader)  # batch index
     for epoch in range(cfg['START_EPOCH'], cfg['NUM_EPOCH']):
         train_sampler.set_epoch(epoch)
@@ -270,6 +345,7 @@ def main_worker(gpu, ngpus_per_node, cfg):
                     inputs, labels_a, labels_b, lam = cutmix_data(inputs, labels, cfg['GPU'], cfg['CUTMIX_PROB'], cfg['MIXUP_ALPHA'])
                     inputs, labels_a, labels_b = map(Variable, (inputs, labels_a, labels_b))
             # compute gradient and do SGD step
+            """
             optimizer.zero_grad()
             with autocast():
                 features = backbone(inputs)
@@ -304,10 +380,10 @@ def main_worker(gpu, ngpus_per_node, cfg):
                                 'Training Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                                     epoch + 1, cfg['NUM_EPOCH'], (batch % len(train_loader)) + 1, len(train_loader), loss = losses, top1 = top1, top5 = top5))
                 print("=" * 60)
-
+            """
             # perform validation & save checkpoints per epoch
             # validation statistics per epoch (buffer for visualization)
-            if (batch + 1) % EVAL_FREQ == 0:
+            if (batch + 1) % EVAL_FREQ == 0 or batch == 0:
                 #lr = scheduler.get_last_lr()
                 lr = optimizer.param_groups[0]['lr']
                 print("Current lr", lr)
