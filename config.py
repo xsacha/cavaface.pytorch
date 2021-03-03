@@ -4,12 +4,12 @@ configurations = {
     1: dict(
         SEED = 1337, # random seed for reproduce results
         
-        DATA_ROOT = '/home/imagus/datasets/', # '/home/imagus/datasets/', # the parent root where your train/val/test data are stored
-        RECORD_DIR = '/home/imagus/datasets/record.txt', # '/home/imagus/datasets/record.txt', # the dataset record dir
-        VAL_DATA_ROOT = '/home/imagus/datasets/data', # the parent root where your val/test data are stored
-        MODEL_ROOT = '/mnt/models', # the root to buffer your checkpoints
-        LOG_ROOT = '/mnt/log', # the root to log your train/val status
-        IS_RESUME = True,
+        DATA_ROOT = '/home/deep/datasets/', # '/home/imagus/datasets/', # the parent root where your train/val/test data are stored
+        RECORD_DIR = '/home/deep/datasets/record.txt', # '/home/imagus/datasets/record.txt', # the dataset record dir
+        VAL_DATA_ROOT = '/home/deep/datasets/data', # the parent root where your val/test data are stored
+        MODEL_ROOT = '/home/deep/cavaface.pytorch/models', # the root to buffer your checkpoints
+        LOG_ROOT = '/home/deep/cavaface.pytorch/log', # the root to log your train/val status
+        IS_RESUME = False,
         BACKBONE_RESUME_ROOT = "/mnt/models/Backbone_EfficientNet_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
         HEAD_RESUME_ROOT = "/mnt/models/Head_CurricularFace_Epoch_18_Time_2020-10-07-09-33_checkpoint.pth",
         
@@ -27,7 +27,7 @@ configurations = {
         EVAL_FREQ = 8000, #for ms1m, batch size 1024, EVAL_FREQ=2000
         DROP_LAST = True, # whether drop the last batch to ensure consistent batch_norm statistics
         
-        LR = 0.0001, # initial LR
+        LR = 0.12, # initial LR
         LR_SCHEDULER = 'cosine', # step/multi_step/cosine
         WARMUP_EPOCH = 0, 
         WARMUP_LR = 0.0,
