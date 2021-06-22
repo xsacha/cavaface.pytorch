@@ -292,7 +292,9 @@ class Backbone_92(nn.Module):
         self._initialize_weights()
     
     def forward(self, x):
-        out = self.input_layer(x)
+        #x0 = x[:,:,0:56,:] # torch.slice(x, 2, 0, 56, 1)
+        #input = torch.cat([x0, torch.flip(x0, [3])], 2)
+        out = self.input_layer(x) #input)
         # print(out.data)
         out = self.residual_block1(out)
         out = self.attention_module1(out)

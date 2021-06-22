@@ -240,9 +240,10 @@ def main_worker(gpu, ngpus_per_node, cfg):
     scaler = torch.cuda.amp.GradScaler()
     writer = SummaryWriter(LOG_ROOT) # writer for buffering intermedium results
     # train
-    #cfg['START_EPOCH'] = 0
+    #cfg['START_EPOCH'] = 1 
     batch = cfg['START_EPOCH'] * len(train_loader)  # batch index
     for epoch in range(cfg['START_EPOCH'], cfg['NUM_EPOCH']):
+        set_seed(int(time.time()) + epoch)
         train_sampler.set_epoch(epoch)
         if LR_SCHEDULER != 'cosine':
             scheduler.step()
