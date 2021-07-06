@@ -32,6 +32,15 @@ def round_channels(channels, divisor=8):
         rounded_channels += divisor
     return rounded_channels
 
+class ToDense(nn.Module):
+    def __init__(self):
+        super(ToDense, self).__init__()
+    def forward(self, input):
+        if input.is_mkldnn:
+            return input.to_dense()
+        else:
+            return input
+
 class Identity(nn.Module):
     """
     Identity block.
@@ -208,7 +217,7 @@ class IBN(nn.Module):
 
 class Flatten(Module):
     def forward(self, input):
-        return input.view(input.size(0), -1)
+        return input.reshape(input.size(0), -1)
 
 
 def l2_norm(input, axis=1):
@@ -253,7 +262,7 @@ class bottleneck_IR(Module):
                 Conv2d(in_channel, depth, (1, 1), stride, bias=False), BatchNorm2d(depth))
         self.res_layer = Sequential(
             BatchNorm2d(in_channel),
-            Conv2d(in_channel, depth, (3, 3), (1, 1), 1, bias=False), 
+            Conv2d(in_channel, depth, (3, 3), (1, 1), 1, bias=False),
             PReLU(depth),
             Conv2d(depth, depth, (3, 3), stride, 1, bias=False), 
             BatchNorm2d(depth))

@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, PReLU, ReLU, Sigmoid, Dropout, MaxPool2d, \
     AdaptiveAvgPool2d, Sequential, Module
 from collections import namedtuple
-from .common import Flatten, l2_norm, SEModule, bottleneck_IR, bottleneck_IR_SE
+from .common import Flatten, l2_norm, SEModule, bottleneck_IR, bottleneck_IR_SE, ToDense
 
 # Support: ['AttentionNet_IR_56', 'AttentionNet_IRSE_56', 'AttentionNet_IR_92', 'AttentionNet_IRSE_92']
 
@@ -65,19 +65,20 @@ class AttentionModule_stage1(nn.Module):
         out_pool3 = self.mpool3(out_block2)
         out_block3 = self.mask_block3(out_pool3)
         
-        out_inter3 = self.interpolation3(out_block3) + out_block2
+        out_inter3 = self.interpolation3(out_block3.to_dense()).to_mkldnn() + out_block2
         out = out_inter3 + out_skip_connect2
         out_block4 = self.mask_block4(out)
 
-        out_inter2 = self.interpolation2(out_block4) + out_block1
+        out_inter2 = self.interpolation2(out_block4.to_dense()).to_mkldnn() + out_block1
         out = out_inter2 + out_skip_connect1
         out_block5 = self.mask_block5(out)
 
-        out_inter1 = self.interpolation1(out_block5) + out_trunk
+        out_inter1 = self.interpolation1(out_block5.to_dense()).to_mkldnn() + out_trunk
         out_block6 = self.mask_block6(out_inter1)
 
-        out = (1 + out_block6) + out_trunk
-        out_last = self.last_block(out)
+        out = out_block6 + out_trunk
+        out2 = out.to_dense() + 1
+        out_last = self.last_block(out2.to_mkldnn())
 
         return out_last
 
@@ -129,13 +130,13 @@ class AttentionModule_stage2(nn.Module):
         out_mpool2 = self.mpool2(out_softmax1)
         out_softmax2 = self.softmax2_blocks(out_mpool2)
 
-        out_interp2 = self.interpolation2(out_softmax2) + out_softmax1
+        out_interp2 = self.interpolation2(out_softmax2.to_dense()).to_mkldnn() + out_softmax1
         out = out_interp2 + out_skip1_connection
 
         out_softmax3 = self.softmax3_blocks(out)
-        out_interp1 = self.interpolation1(out_softmax3) + out_trunk
+        out_interp1 = self.interpolation1(out_softmax3.to_dense()).to_mkldnn() + out_trunk
         out_softmax4 = self.softmax4_blocks(out_interp1)
-        out = (1 + out_softmax4) * out_trunk
+        out = out_softmax4 * out_trunk + out_trunk
         out_last = self.last_blocks(out)
 
         return out_last
@@ -179,9 +180,9 @@ class AttentionModule_stage3(nn.Module):
         out_mpool1 = self.mpool1(x)
         out_softmax1 = self.softmax1_blocks(out_mpool1)
 
-        out_interp1 = self.interpolation1(out_softmax1) + out_trunk
+        out_interp1 = self.interpolation1(out_softmax1.to_dense()).to_mkldnn() + out_trunk
         out_softmax2 = self.softmax2_blocks(out_interp1)
-        out = (1 + out_softmax2) * out_trunk
+        out = out_softmax2 * out_trunk + out_trunk
         out_last = self.last_blocks(out)
 
         return out_last
@@ -213,6 +214,7 @@ class Backbone_56(nn.Module):
                                            Dropout(0.4),
                                            Flatten(),
                                            Linear(512 * 7 * 7, 512),
+                                           ToDense(),
                                            BatchNorm1d(512, affine=False))
         else:
             self.output_layer = Sequential(BatchNorm2d(512),
@@ -282,6 +284,7 @@ class Backbone_92(nn.Module):
                                            Dropout(0.4),
                                            Flatten(),
                                            Linear(512 * 7 * 7, 512),
+                                           ToDense(),
                                            BatchNorm1d(512, affine=False))
         else:
             self.output_layer = Sequential(BatchNorm2d(512),
@@ -292,9 +295,10 @@ class Backbone_92(nn.Module):
         self._initialize_weights()
     
     def forward(self, x):
-        #x0 = x[:,:,0:56,:] # torch.slice(x, 2, 0, 56, 1)
-        #input = torch.cat([x0, torch.flip(x0, [3])], 2)
-        out = self.input_layer(x) #input)
+        x0 = x[:,:,0:56,:] # torch.slice(x, 2, 0, 56, 1)
+        input = torch.cat([x0, torch.flip(x0, [3])], 2)
+        input = input.to_mkldnn()
+        out = self.input_layer(input)
         # print(out.data)
         out = self.residual_block1(out)
         out = self.attention_module1(out)

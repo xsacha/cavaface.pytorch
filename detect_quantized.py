@@ -13,6 +13,7 @@ from backbone.resattnet import *
 from backbone.efficientpolyface import *
 from backbone.resnest import *
 from backbone.efficientnet import *
+import torch.autograd.profiler as profiler
 
 from torch._C import MobileOptimizerType
 
@@ -26,7 +27,7 @@ from torch.utils import mkldnn
 
 parser = argparse.ArgumentParser(description='Retinaface')
 
-parser.add_argument('-m', '--trained_model', default='Backbone_AttentionNet_IR_92_Epoch_45_Time_2021-05-16-05-18_checkpoint.pth',
+parser.add_argument('-m', '--trained_model', default='Backbone_AttentionNet_IR_92_Epoch_27_Time_2021-06-26-21-38_checkpoint.pth',
                     type=str, help='Trained state_dict file path to open')
 parser.add_argument('--cpu', action="store_true", default=False, help='Use cpu inference')
 parser.add_argument('--cl', action="store_true", default=False, help='Use channels last')
@@ -96,8 +97,10 @@ def test(model, device, args):
 
         tic = time.time()
         #with torch.cpu.amp.autocast(args.mkl):
-        feature = model(img)  # forward pass
+        with profiler.profile(with_stack=True, profile_memory=False) as prof:
+            feature = model(img)  # forward pass
         print('net forward time: {:.4f}'.format(time.time() - tic))
+        print(prof.key_averages(group_by_stack_n=5).table(sort_by='self_cpu_time_total', row_limit=5))
 
 if __name__ == '__main__':
     torch.set_grad_enabled(False)
@@ -323,7 +326,7 @@ if __name__ == '__main__':
         net = net.to(memory_format=torch.channels_last)
     if args.mkl:
         inp = inp.to_mkldnn()
-        net = mkldnn.to_mkldnn(net)
+        #net = mkldnn.to_mkldnn(net)
     #with torch.cpu.amp.autocast(args.mkl):
     #net = torch.jit.script(net)
     net = torch.jit.trace(net, inp, check_trace=False)
@@ -336,7 +339,8 @@ if __name__ == '__main__':
         torchnet.save('v8.pt')
         test(torchnet, device, args)
     else:
-        net.save('v8.pt')
+        net.save('v8mask.pt')
+        #net2 = torch.jit.load('v8.pt')
         test(net, device, args)
 
 
